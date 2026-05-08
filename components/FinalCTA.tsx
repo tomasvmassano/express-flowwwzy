@@ -11,7 +11,7 @@ export default function FinalCTA() {
   };
 
   return (
-    <section className="py-24 md:py-32 spotlight relative">
+    <section className="py-20 md:py-28 spotlight relative">
       <div className="container-x max-w-[920px] text-center">
         <motion.span
           initial={{ opacity: 0, y: 12 }}

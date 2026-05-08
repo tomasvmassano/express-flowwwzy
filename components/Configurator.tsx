@@ -101,14 +101,14 @@ export default function Configurator() {
 
   if (!hydrated) {
     return (
-      <section id="configurator" className="py-20 md:py-28">
+      <section id="configurator" className="py-16 md:py-24">
         <div className="container-x" />
       </section>
     );
   }
 
   return (
-    <section id="configurator" className="py-20 md:py-28 spotlight">
+    <section id="configurator" className="py-16 md:py-24 spotlight">
       <div className="container-x max-w-[1080px]">
         {step >= 1 && step <= 7 && (
           <>

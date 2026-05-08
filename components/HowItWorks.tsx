@@ -25,7 +25,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <section className="py-20 md:py-28 relative spotlight">
+    <section className="py-16 md:py-24 relative spotlight">
       <div className="container-x">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

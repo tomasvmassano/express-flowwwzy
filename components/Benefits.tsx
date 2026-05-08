@@ -27,7 +27,7 @@ const benefits = [
 
 export default function Benefits() {
   return (
-    <section className="py-20 md:py-28 spotlight">
+    <section className="py-16 md:py-24 spotlight">
       <div className="container-x">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

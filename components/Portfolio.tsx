@@ -22,7 +22,7 @@ const projects: Project[] = [
 
 export default function Portfolio() {
   return (
-    <section id="portfolio" className="py-20 md:py-28 relative">
+    <section id="portfolio" className="py-16 md:py-24 relative">
       <div className="container-x">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

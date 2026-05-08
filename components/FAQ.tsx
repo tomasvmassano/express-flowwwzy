@@ -31,7 +31,7 @@ const faqs = [
 
 export default function FAQ() {
   return (
-    <section className="py-20 md:py-28 spotlight">
+    <section className="py-16 md:py-24 spotlight">
       <div className="container-x max-w-[920px]">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

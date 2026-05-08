@@ -71,7 +71,7 @@ export default function Pricing() {
   };
 
   return (
-    <section id="pricing" className="py-20 md:py-28 relative">
+    <section id="pricing" className="py-16 md:py-24 relative">
       <div className="container-x">
         <motion.h2
           initial={{ opacity: 0, y: 20 }}

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 export default function Founder() {
   return (
-    <section className="py-20 md:py-28 spotlight">
+    <section className="py-16 md:py-24 spotlight">
       <div className="container-x max-w-[1080px]">
         <motion.div
           initial={{ opacity: 0, y: 24 }}

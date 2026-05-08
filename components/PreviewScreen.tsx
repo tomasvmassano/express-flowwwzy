@@ -88,7 +88,7 @@ export default function PreviewScreen() {
   if (f.step !== 8) return null;
 
   return (
-    <section id="preview" className="py-20 md:py-28 spotlight">
+    <section id="preview" className="py-16 md:py-24 spotlight">
       <div className="container-x max-w-[1080px]">
         <AnimatePresence>
           <motion.div

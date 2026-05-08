@@ -11,7 +11,7 @@ const lines = [
 
 export default function ProblemAgitation() {
   return (
-    <section className="py-20 md:py-32 relative">
+    <section className="py-16 md:py-28 relative">
       <div className="container-x max-w-[900px]">
         {lines.map((line, i) => (
           <motion.p

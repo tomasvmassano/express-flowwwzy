@@ -22,7 +22,7 @@ export default function WhoFor() {
   };
 
   return (
-    <section className="py-20 md:py-28">
+    <section className="py-16 md:py-24">
       <div className="container-x">
         <div className="max-w-[24ch]">
           <motion.span
