@@ -1,30 +1,33 @@
 /**
- * Component library — STUB with 3 starter components.
+ * Component library — Lote 1 (10 blocks).
  *
- * This is intentionally minimal. The real catalog of 40-60 components
- * lands in Week 2-3 once the matcher API is validated.
+ * Each manifest hand-tags a real React component under
+ * `components/library/<category>/<Name>.tsx` with DesignDNA so the
+ * matcher can rank them against form inputs + reference URLs.
  *
- * Each manifest is hand-tagged: a senior designer fills in the
- * DesignDNA fields for each block. The matcher uses these tags to
- * decide which components fit a given client request.
+ * The components themselves are token-driven (read from CSS vars
+ * defined in `app/library.css`). Default rendering is generic
+ * dark-mode + Inter; the matcher swaps tokens per project via
+ * <LibraryRoot palette={...} fontPair={...}>. Adapting to a new
+ * brand = changing tokens, not editing block code.
  *
- * Convention:
- *   - One file per component, exporting `manifest: ComponentManifest`
- *     and `default` as the React component.
- *   - filePath relative to repo root, used by the generator (Week 3+)
- *     to import the right block.
+ * The DesignDNA tagged below describes the block's design INTENT
+ * (e.g. "this is meant to feel bold and grotesque"), not the literal
+ * fonts loaded in the demo. The matcher uses intent for ranking.
  */
 
 import { ComponentManifest } from "../types";
 
 export const LIBRARY: ComponentManifest[] = [
-  // ─────────── Hero ───────────
+  // ─────────────────────────────────────────────────────────────────────
+  // HEROES
+  // ─────────────────────────────────────────────────────────────────────
   {
     id: "hero-centered-display",
     name: "Hero — Centered Display",
     category: "hero",
-    moodTags: ["minimalista", "editorial", "luxurious"],
-    tone: { profCasual: 30, calmBold: 35, classicModern: 60 },
+    moodTags: ["minimalista", "editorial", "luxurious", "clean"],
+    tone: { profCasual: 30, calmBold: 40, classicModern: 60 },
     typography: {
       primary: "serif-display",
       pairing: "display-body-pair",
@@ -32,9 +35,9 @@ export const LIBRARY: ComponentManifest[] = [
       expressiveness: 4,
     },
     palette: {
-      closestId: "black-cream",
-      dominantHex: ["#000000", "#0F1010", "#FAEBE3", "#ECECEC"],
-      background: "#000000",
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA", "#8B8B8B"],
+      background: "#0A0A0A",
       isDarkMode: true,
     },
     density: "airy",
@@ -43,18 +46,92 @@ export const LIBRARY: ComponentManifest[] = [
     motion: "snappy",
     filePath: "components/library/heroes/HeroCenteredDisplay.tsx",
     exportName: "default",
-    compatiblePalettes: ["black-cream", "mono-plus", "warm-sand"],
+    compatiblePalettes: ["black-cream", "mono-plus", "warm-sand", "royal", "forest"],
     slots: [
-      { key: "label", label: "Label sobre o título", type: "text-short", required: false, maxChars: 40 },
-      { key: "headline", label: "Headline principal", type: "text-short", required: true, maxChars: 60 },
-      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 140 },
-      { key: "primaryCta", label: "CTA principal", type: "text-short", required: true, maxChars: 24 },
-      { key: "secondaryCta", label: "CTA secundário", type: "text-short", required: false, maxChars: 24 },
+      { key: "eyebrow", label: "Label sobre o título", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline principal", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "primaryCtaLabel", label: "CTA principal", type: "text-short", required: true, maxChars: 24 },
+      { key: "primaryCtaHref", label: "CTA principal — destino", type: "url", required: false },
+      { key: "secondaryCtaLabel", label: "CTA secundário", type: "text-short", required: false, maxChars: 24 },
+      { key: "secondaryCtaHref", label: "CTA secundário — destino", type: "url", required: false },
     ],
-    notes: "Fold seguro: arejado, premium, serif italic accent.",
+  },
+  {
+    id: "hero-split-image-text",
+    name: "Hero — Split Image + Text",
+    category: "hero",
+    moodTags: ["caloroso", "suave", "editorial", "organic"],
+    tone: { profCasual: 45, calmBold: 35, classicModern: 50 },
+    typography: {
+      primary: "serif-modern",
+      pairing: "serif-sans-pair",
+      feel: "humanist",
+      expressiveness: 3,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "asymmetric",
+    imagery: { style: "photographic", treatment: "graded", showsPeople: true },
+    motion: "calm",
+    filePath: "components/library/heroes/HeroSplitImageText.tsx",
+    exportName: "default",
+    compatiblePalettes: ["warm-sand", "forest", "black-cream", "coastal", "sunset"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "imageUrl", label: "Imagem hero", type: "image", required: true },
+      { key: "imageAlt", label: "Alt da imagem", type: "text-short", required: false, maxChars: 120 },
+      { key: "primaryCtaLabel", label: "CTA principal", type: "text-short", required: true, maxChars: 24 },
+      { key: "primaryCtaHref", label: "CTA principal — destino", type: "url", required: false },
+      { key: "secondaryCtaLabel", label: "CTA secundário", type: "text-short", required: false, maxChars: 24 },
+      { key: "secondaryCtaHref", label: "CTA secundário — destino", type: "url", required: false },
+    ],
+  },
+  {
+    id: "hero-bold-statement",
+    name: "Hero — Bold Statement",
+    category: "hero",
+    moodTags: ["bold", "brutalist", "editorial", "futuristic"],
+    tone: { profCasual: 50, calmBold: 80, classicModern: 70 },
+    typography: {
+      primary: "sans-grotesque",
+      pairing: "single",
+      feel: "industrial",
+      expressiveness: 5,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "tight",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/heroes/HeroBoldStatement.tsx",
+    exportName: "default",
+    compatiblePalettes: ["mono-plus", "black-cream", "bold-red", "royal"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "statement", label: "Frase manifesto", type: "text-short", required: true, maxChars: 120 },
+      { key: "accentWord", label: "Palavra com ênfase (italic)", type: "text-short", required: false, maxChars: 30 },
+      { key: "byline", label: "Byline / explicação", type: "text-short", required: false, maxChars: 200 },
+      { key: "primaryCtaLabel", label: "CTA", type: "text-short", required: false, maxChars: 24 },
+      { key: "primaryCtaHref", label: "CTA — destino", type: "url", required: false },
+    ],
   },
 
-  // ─────────── Services ───────────
+  // ─────────────────────────────────────────────────────────────────────
+  // SERVICES
+  // ─────────────────────────────────────────────────────────────────────
   {
     id: "services-grid-3col",
     name: "Services — 3-Column Grid",
@@ -68,9 +145,9 @@ export const LIBRARY: ComponentManifest[] = [
       expressiveness: 2,
     },
     palette: {
-      closestId: "black-cream",
-      dominantHex: ["#000000", "#0F1010", "#FAEBE3", "#ECECEC"],
-      background: "#000000",
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
       isDarkMode: true,
     },
     density: "comfortable",
@@ -81,19 +158,18 @@ export const LIBRARY: ComponentManifest[] = [
     exportName: "default",
     compatiblePalettes: ["black-cream", "mono-plus", "royal", "forest", "coastal"],
     slots: [
-      { key: "label", label: "Label", type: "text-short", required: false, maxChars: 40 },
-      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 80 },
-      { key: "items", label: "3 serviços (título + descrição)", type: "list", required: true },
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline da secção", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "services", label: "3 serviços (label + título + descrição)", type: "list", required: true },
     ],
   },
-
-  // ─────────── Testimonials ───────────
   {
-    id: "testimonials-rotating-quote",
-    name: "Testimonials — Rotating Quote",
-    category: "testimonials",
-    moodTags: ["editorial", "luxurious", "suave"],
-    tone: { profCasual: 25, calmBold: 30, classicModern: 50 },
+    id: "services-accordion",
+    name: "Services — Vertical Accordion",
+    category: "services",
+    moodTags: ["editorial", "suave", "minimalista"],
+    tone: { profCasual: 35, calmBold: 30, classicModern: 50 },
     typography: {
       primary: "serif-modern",
       pairing: "serif-sans-pair",
@@ -101,27 +177,213 @@ export const LIBRARY: ComponentManifest[] = [
       expressiveness: 3,
     },
     palette: {
-      closestId: "black-cream",
-      dominantHex: ["#ECECEC", "#FAEBE3", "#0F1010", "#000000"],
-      background: "#ECECEC",
-      isDarkMode: false,
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "calm",
+    filePath: "components/library/services/ServicesAccordion.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "warm-sand", "forest", "royal", "mono-plus"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "items", label: "Lista de serviços (título + descrição)", type: "list", required: true },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // TESTIMONIALS
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "testimonials-rotating-quote",
+    name: "Testimonials — Rotating Quote",
+    category: "testimonials",
+    moodTags: ["editorial", "luxurious", "suave"],
+    tone: { profCasual: 30, calmBold: 30, classicModern: 50 },
+    typography: {
+      primary: "serif-modern",
+      pairing: "serif-sans-pair",
+      feel: "elegant",
+      expressiveness: 4,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
     },
     density: "airy",
     alignment: "centered",
-    imagery: { style: "photographic", treatment: "graded", showsPeople: true },
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
     motion: "calm",
     filePath: "components/library/testimonials/TestimonialsRotatingQuote.tsx",
     exportName: "default",
-    compatiblePalettes: ["black-cream", "warm-sand", "mono-plus"],
+    compatiblePalettes: ["black-cream", "warm-sand", "mono-plus", "royal", "forest"],
     slots: [
-      { key: "label", label: "Label", type: "text-short", required: false, maxChars: 40 },
-      { key: "quotes", label: "Lista de testemunhos (frase + autor + cargo)", type: "list", required: true },
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "testimonials", label: "Lista de testemunhos (frase + autor + cargo)", type: "list", required: true },
+      { key: "intervalMs", label: "Intervalo de rotação (ms, 0 desativa)", type: "stat", required: false },
     ],
-    notes: "White island contra fundo dark. Rotaciona quotes a cada 6s.",
+  },
+  {
+    id: "testimonials-marquee",
+    name: "Testimonials — Horizontal Marquee",
+    category: "testimonials",
+    moodTags: ["clean", "tech", "futuristic", "minimalista"],
+    tone: { profCasual: 50, calmBold: 50, classicModern: 70 },
+    typography: {
+      primary: "sans-geometric",
+      pairing: "single",
+      feel: "neutral",
+      expressiveness: 2,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "centered",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "calm",
+    filePath: "components/library/testimonials/TestimonialsMarquee.tsx",
+    exportName: "default",
+    compatiblePalettes: ["mono-plus", "black-cream", "coastal", "royal"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline (opcional)", type: "text-short", required: false, maxChars: 90 },
+      { key: "testimonials", label: "Lista de quotes (frase + autor + cargo)", type: "list", required: true },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // ABOUT
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "about-portrait-bio",
+    name: "About — Portrait + Bio",
+    category: "about",
+    moodTags: ["caloroso", "suave", "editorial", "organic"],
+    tone: { profCasual: 50, calmBold: 30, classicModern: 45 },
+    typography: {
+      primary: "serif-modern",
+      pairing: "serif-sans-pair",
+      feel: "humanist",
+      expressiveness: 3,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "asymmetric",
+    imagery: { style: "photographic", treatment: "graded", showsPeople: true },
+    motion: "calm",
+    filePath: "components/library/about/AboutPortraitBio.tsx",
+    exportName: "default",
+    compatiblePalettes: ["warm-sand", "forest", "black-cream", "sunset", "coastal"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "name", label: "Nome", type: "text-short", required: true, maxChars: 80 },
+      { key: "role", label: "Cargo / função", type: "text-short", required: true, maxChars: 80 },
+      { key: "bio", label: "Bio (1-2 parágrafos)", type: "text-long", required: true, maxChars: 800 },
+      { key: "portraitUrl", label: "Foto", type: "image", required: true },
+      { key: "portraitAlt", label: "Alt da foto", type: "text-short", required: false },
+      { key: "stats", label: "Stats (até 3, valor + label)", type: "list", required: false },
+      { key: "ctaLabel", label: "CTA texto", type: "text-short", required: false, maxChars: 30 },
+      { key: "ctaHref", label: "CTA destino", type: "url", required: false },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // CONTACT
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "contact-form-split",
+    name: "Contact — Form + Image Split",
+    category: "contact",
+    moodTags: ["clean", "minimalista", "editorial"],
+    tone: { profCasual: 40, calmBold: 35, classicModern: 55 },
+    typography: {
+      primary: "sans-geometric",
+      pairing: "single",
+      feel: "neutral",
+      expressiveness: 2,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "asymmetric",
+    imagery: { style: "photographic", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/contact/ContactFormSplit.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "royal", "coastal", "forest"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "imageUrl", label: "Imagem (mapa, foto do espaço, etc.)", type: "image", required: false },
+      { key: "imageAlt", label: "Alt", type: "text-short", required: false },
+      { key: "contactLines", label: "Linhas de contacto (label + valor + href)", type: "list", required: false },
+      { key: "submitLabel", label: "Texto do botão", type: "text-short", required: false, maxChars: 30 },
+      { key: "action", label: "URL para POST do formulário", type: "url", required: false },
+      { key: "successMessage", label: "Mensagem após envio", type: "text-short", required: false, maxChars: 140 },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // FOOTER
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "footer-minimal-3col",
+    name: "Footer — Minimal 3-Column",
+    category: "footer",
+    moodTags: ["minimalista", "clean", "editorial"],
+    tone: { profCasual: 40, calmBold: 30, classicModern: 55 },
+    typography: {
+      primary: "sans-geometric",
+      pairing: "single",
+      feel: "neutral",
+      expressiveness: 1,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "static",
+    filePath: "components/library/footer/FooterMinimal3Col.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "royal", "forest", "coastal", "warm-sand"],
+    slots: [
+      { key: "brandName", label: "Nome da marca", type: "text-short", required: true, maxChars: 60 },
+      { key: "tagline", label: "Tagline", type: "text-short", required: false, maxChars: 140 },
+      { key: "columns", label: "Colunas de links (título + lista de {label, href})", type: "list", required: true },
+      { key: "socialLinks", label: "Redes sociais", type: "list", required: false },
+      { key: "copyright", label: "Linha de copyright", type: "text-short", required: false, maxChars: 100 },
+      { key: "legalLinks", label: "Links legais", type: "list", required: false },
+    ],
   },
 ];
 
-/** Filter the library by category — the matcher uses this. */
+/** Filter the library by category — used by the matcher. */
 export function libraryByCategory(category: string): ComponentManifest[] {
   return LIBRARY.filter((c) => c.category === category);
 }

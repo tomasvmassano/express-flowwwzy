@@ -1,0 +1,138 @@
+/**
+ * Library token defaults.
+ *
+ * Scoped to .lib-theme — never leaks into the LP. Blocks read these
+ * vars via Tailwind aliases (bg-lib-surface, text-lib-foreground,
+ * font-lib-display, etc.).
+ *
+ * Default = neutral dark mode + Inter. Generic on purpose so blocks
+ * work standalone in the /library demo. The matcher swaps tokens
+ * per project by writing data-theme on the wrapper.
+ */
+
+.lib-theme {
+  /* Surfaces */
+  --lib-bg: #0A0A0A;
+  --lib-surface: #131313;
+  --lib-foreground: #EDEDED;
+  --lib-muted: #8B8B8B;
+  --lib-accent: #FAFAFA;
+  --lib-accent-foreground: #0A0A0A;
+  --lib-border: #232323;
+
+  /* Type — generic stack, no brand assumptions */
+  --lib-font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --lib-font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+
+  /* Spacing tokens — section vertical pad scales with viewport */
+  --lib-section-y: clamp(48px, 8vw, 96px);
+  --lib-radius-card: 12px;
+  --lib-radius-section: 24px;
+}
+
+/* ─── Per-palette themes ───────────────────────────────────────────────
+ * Selectors are .lib-theme[data-theme="..."]. Each only overrides the
+ * vars that change; everything else falls through to the default above.
+ * Names match the configurator's PALETTE_IDS in lib/studio/vocabulary.ts.
+ */
+
+.lib-theme[data-theme="black-cream"] {
+  --lib-bg: #000000;
+  --lib-surface: #0F1010;
+  --lib-foreground: #ECECEC;
+  --lib-muted: #757575;
+  --lib-accent: #FAEBE3;
+  --lib-accent-foreground: #000000;
+  --lib-border: #262626;
+}
+
+.lib-theme[data-theme="forest"] {
+  --lib-bg: #0F1F1A;
+  --lib-surface: #14271F;
+  --lib-foreground: #F5F1E8;
+  --lib-muted: #7E8E78;
+  --lib-accent: #A8B89A;
+  --lib-accent-foreground: #0F1F1A;
+  --lib-border: #21342B;
+}
+
+.lib-theme[data-theme="coastal"] {
+  --lib-bg: #0F2027;
+  --lib-surface: #142A33;
+  --lib-foreground: #F0F4F8;
+  --lib-muted: #6B8A95;
+  --lib-accent: #88C8E0;
+  --lib-accent-foreground: #0F2027;
+  --lib-border: #1F3540;
+}
+
+.lib-theme[data-theme="warm-sand"] {
+  --lib-bg: #1F1611;
+  --lib-surface: #281D17;
+  --lib-foreground: #F5EDE3;
+  --lib-muted: #8E7D6E;
+  --lib-accent: #D9A876;
+  --lib-accent-foreground: #1F1611;
+  --lib-border: #392A21;
+}
+
+.lib-theme[data-theme="bold-red"] {
+  --lib-bg: #100808;
+  --lib-surface: #1A0E0E;
+  --lib-foreground: #F8F4EE;
+  --lib-muted: #8B6F66;
+  --lib-accent: #E8B871;
+  --lib-accent-foreground: #100808;
+  --lib-border: #2D1818;
+}
+
+.lib-theme[data-theme="royal"] {
+  --lib-bg: #0E1B2C;
+  --lib-surface: #142336;
+  --lib-foreground: #F5F1E8;
+  --lib-muted: #7387A0;
+  --lib-accent: #C9A876;
+  --lib-accent-foreground: #0E1B2C;
+  --lib-border: #1E2D44;
+}
+
+.lib-theme[data-theme="mono-plus"] {
+  --lib-bg: #000000;
+  --lib-surface: #1A1A1A;
+  --lib-foreground: #FCFCFC;
+  --lib-muted: #757575;
+  --lib-accent: #B3B3B3;
+  --lib-accent-foreground: #000000;
+  --lib-border: #2A2A2A;
+}
+
+.lib-theme[data-theme="sunset"] {
+  --lib-bg: #1A0F1A;
+  --lib-surface: #221423;
+  --lib-foreground: #FAEBE3;
+  --lib-muted: #8A6F8A;
+  --lib-accent: #F08C5C;
+  --lib-accent-foreground: #1A0F1A;
+  --lib-border: #2C1B2D;
+}
+
+/* ─── Light variant (toggle by adding data-mode="light") ──────────────── */
+.lib-theme[data-mode="light"] {
+  --lib-bg: #FCFCFC;
+  --lib-surface: #FFFFFF;
+  --lib-foreground: #0A0A0A;
+  --lib-muted: #6B6B6B;
+  --lib-accent: #0A0A0A;
+  --lib-accent-foreground: #FCFCFC;
+  --lib-border: #E5E5E5;
+}
+
+/* ─── Library-scoped reset for typography ─────────────────────────────── */
+.lib-theme {
+  font-family: var(--lib-font-body);
+  background: var(--lib-bg);
+  color: var(--lib-foreground);
+}
+.lib-theme h1, .lib-theme h2, .lib-theme h3, .lib-theme h4 {
+  font-family: var(--lib-font-display);
+}
