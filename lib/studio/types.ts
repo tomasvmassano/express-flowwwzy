@@ -86,6 +86,32 @@ export const DesignDNASchema = z.object({
 export type DesignDNA = z.infer<typeof DesignDNASchema>;
 
 // ───────────────────────────────────────────────────────────────────────────
+// ExtractedDNA — what the vision model emits for a reference URL.
+// Slightly trimmed: the extractor doesn't know the closest palette ID
+// (that's a Lab-distance computation done in the matcher with the catalog
+// of named palettes). It only returns the raw dominant hex values.
+// ───────────────────────────────────────────────────────────────────────────
+
+export const ExtractedDNASchema = z.object({
+  moodTags: z.array(z.enum(MOOD_TAGS)).min(1).max(4),
+  tone: ToneDNASchema,
+  typography: TypographyDNASchema,
+  palette: z.object({
+    dominantHex: z.array(Hex).min(2).max(6),
+    background: Hex,
+    isDarkMode: z.boolean(),
+  }),
+  density: z.enum(DENSITIES),
+  alignment: z.enum(ALIGNMENTS),
+  imagery: ImageryDNASchema,
+  motion: z.enum(MOTION_STYLES),
+  /** One paragraph in plain Portuguese describing the site's overall feel */
+  summary: z.string().min(40).max(800),
+});
+
+export type ExtractedDNA = z.infer<typeof ExtractedDNASchema>;
+
+// ───────────────────────────────────────────────────────────────────────────
 // ContentSlot — what a component asks the generator to fill
 // ───────────────────────────────────────────────────────────────────────────
 
