@@ -1,0 +1,290 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Satoshi";
+  src: url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap");
+  font-display: swap;
+}
+
+@import url("https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=STIX+Two+Text:ital,wght@1,400;1,500&display=swap");
+
+:root {
+  --black: #000000;
+  --dark-grey: #0F1010;
+  --spotlight: #131313;
+  --divider: #262626;
+  --gray-500: #757575;
+  --gray-300: #B3B3B3;
+  --white: #ECECEC;
+  --pure-white: #FFFFFF;
+  --cream: #FAEBE3;
+  --primary: #307097;
+}
+
+html, body {
+  background: var(--black);
+  color: var(--white);
+  font-family: "Satoshi", system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  overflow-x: hidden;
+}
+
+::selection { background: var(--cream); color: var(--black); }
+
+/* H1 — Satoshi 500, tight tracking */
+h1, .h1 {
+  font-family: "Satoshi", sans-serif;
+  font-weight: 500;
+  font-size: clamp(2.75rem, 7vw, 6.6rem);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+
+h2, .h2 {
+  font-family: "Satoshi", sans-serif;
+  font-weight: 500;
+  font-size: clamp(2rem, 4.4vw, 3.875rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+h3, .h3 {
+  font-family: "Satoshi", sans-serif;
+  font-weight: 500;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.italic-accent {
+  font-family: "STIX Two Text", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--cream);
+}
+
+.label {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  font-weight: 600;
+}
+
+.container-x {
+  max-width: 1250px;
+  margin: 0 auto;
+  padding-left: 40px;
+  padding-right: 40px;
+}
+@media (max-width: 767px) {
+  .container-x { padding-left: 24px; padding-right: 24px; }
+}
+@media (max-width: 479px) {
+  .container-x { padding-left: 16px; padding-right: 16px; }
+}
+
+/* Section spotlight gradient */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 30%, var(--spotlight) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--white); color: var(--black);
+  padding: 14px 24px;
+  border-radius: 0.5rem;
+  font-weight: 600; font-size: 16px; line-height: 1;
+  transition: background 200ms cubic-bezier(.165,.84,.44,1), transform 200ms cubic-bezier(.165,.84,.44,1);
+  cursor: pointer;
+  border: 0;
+}
+.btn-primary:hover { background: #B1B1B1; transform: translateY(-1px); }
+
+.btn-dark {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--dark-grey); color: var(--white);
+  padding: 14px 24px;
+  border-radius: 0.5rem;
+  font-weight: 600; font-size: 16px; line-height: 1;
+  transition: background 200ms cubic-bezier(.165,.84,.44,1), border-color 200ms cubic-bezier(.165,.84,.44,1);
+  cursor: pointer;
+  border: 1px solid var(--divider);
+}
+.btn-dark:hover { background: #313131; border-color: var(--primary); }
+
+.btn-tertiary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--white);
+  padding: 0;
+  font-weight: 600; font-size: 16px;
+  cursor: pointer;
+  border: 0;
+  transition: color 300ms cubic-bezier(.165,.84,.44,1);
+}
+.btn-tertiary:hover { color: var(--cream); }
+
+/* Card on dark — border, no shadow */
+.card-dark {
+  background: var(--dark-grey);
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  transition: border-color 300ms cubic-bezier(.165,.84,.44,1), transform 300ms cubic-bezier(.165,.84,.44,1);
+}
+.card-dark:hover { border-color: #3a3a3a; }
+
+/* White island for testimonials etc */
+.white-island {
+  background: var(--white);
+  color: var(--black);
+  border-radius: 20px;
+}
+
+/* Form input */
+.input-dark {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  padding: 16px 18px;
+  color: var(--white);
+  font-family: inherit;
+  font-size: 16px;
+  transition: border-color 200ms cubic-bezier(.165,.84,.44,1), box-shadow 200ms;
+}
+.input-dark:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(48, 112, 151, 0.18);
+}
+.input-dark::placeholder { color: #5a5a5a; }
+
+/* Marquee */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 50s linear infinite;
+}
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Custom cursor */
+.cursor-cream { cursor: none; }
+@media (max-width: 991px) {
+  .cursor-cream { cursor: pointer; }
+}
+
+#cream-cursor {
+  position: fixed;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--cream);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 300ms cubic-bezier(.165,.84,.44,1), width 200ms, height 200ms;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--black);
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  mix-blend-mode: normal;
+}
+#cream-cursor.active { transform: translate(-50%, -50%) scale(1); }
+#cream-cursor.large { width: 88px; height: 88px; }
+@media (max-width: 991px) { #cream-cursor { display: none; } }
+
+/* Scroll reveal */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 500ms cubic-bezier(.165,.84,.44,1), transform 500ms cubic-bezier(.165,.84,.44,1); }
+.reveal.in { opacity: 1; transform: translateY(0); }
+
+/* Pricing badge */
+.popular-badge {
+  background: var(--cream);
+  color: var(--black);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+/* Active step ring */
+.step-active {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 4px rgba(48, 112, 151, 0.18);
+}
+
+/* Slider */
+input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; background: transparent; }
+input[type="range"]::-webkit-slider-runnable-track { height: 2px; background: var(--divider); }
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--cream); margin-top: -10px;
+  cursor: pointer;
+  box-shadow: 0 0 0 4px rgba(250,235,227,0.12);
+  transition: transform 200ms cubic-bezier(.165,.84,.44,1);
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+
+/* Hide scrollbar in horizontal scrollers */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Underline link */
+.link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0% 100%;
+  transition: background-size 300ms cubic-bezier(.165,.84,.44,1);
+  padding-bottom: 2px;
+}
+.link-underline:hover { background-size: 100% 1px; }
+
+/* Accordion */
+details[open] summary .acc-icon { transform: rotate(45deg); }
+details summary { list-style: none; cursor: pointer; }
+details summary::-webkit-details-marker { display: none; }
+.acc-icon { transition: transform 300ms cubic-bezier(.165,.84,.44,1); }
+
+/* Floating WhatsApp */
+.whatsapp-float {
+  position: fixed;
+  bottom: 20px; right: 20px;
+  z-index: 60;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12px 32px -8px rgba(37, 211, 102, 0.5);
+  transition: transform 200ms cubic-bezier(.165,.84,.44,1);
+}
+.whatsapp-float:hover { transform: scale(1.05); }
+@media (min-width: 768px) { .whatsapp-float { bottom: 24px; right: 24px; } }
