@@ -34,10 +34,10 @@ export default function Benefits() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6, ease: [0.165, 0.84, 0.44, 1] }}
-          className="max-w-[24ch]"
+          className="max-w-none"
         >
           <span className="label">O que muda para si</span>
-          <h2 className="mt-4">
+          <h2 className="mt-4 max-w-[22ch] md:max-w-[36ch] text-balance">
             Trabalho de estúdio, <span className="italic-accent">sem o calendário</span> de estúdio.
           </h2>
         </motion.div>

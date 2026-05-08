@@ -1,9 +1,9 @@
-export type Tier = "page" | "site" | "brand";
+export type Tier = "page" | "site" | "backoffice";
 
 export const TIERS: Record<Tier, { id: Tier; name: string; price: number; delivery: string; description: string }> = {
   page: { id: "page", name: "Express Page", price: 490, delivery: "48-72h", description: "Landing page única, alta conversão" },
   site: { id: "site", name: "Express Site", price: 890, delivery: "5 dias", description: "Site completo até 5 páginas" },
-  brand: { id: "brand", name: "Express Brand", price: 1490, delivery: "7 dias", description: "Site + identidade visual completa" },
+  backoffice: { id: "backoffice", name: "Express Backoffice", price: 1490, delivery: "10 dias", description: "Site + ferramenta interna à medida" },
 };
 
 export type Style =
@@ -19,7 +19,7 @@ export type FormData = {
   style: Style | null;
   paletteFavourite: string | null;
   paletteAvoid: string | null;
-  toneProfCasual: number; // 0-100
+  toneProfCasual: number;
   toneCalmBold: number;
   toneClassicModern: number;
   business: { name: string; what: string; differentiator: string };
@@ -45,5 +45,5 @@ export const initialForm: FormData = {
   details: { name: "", email: "", phone: "" },
   needCopy: false,
   needLogo: false,
-  step: 0,
+  step: 1,
 };

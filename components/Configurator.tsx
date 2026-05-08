@@ -45,15 +45,16 @@ export default function Configurator() {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
-  // Step 0 here = "intro" (CTA collapsed). Step 1-7 = the 7 form steps. Step 8 = preview.
+  // Steps 1-7 are the form. Step 8 is the preview/checkout commit screen.
   const step = f.step;
   const progress = step >= 1 && step <= 7 ? ((step - 1) / TOTAL) * 100 + 100 / TOTAL : 0;
 
-  const start = () => {
+  // Migrate legacy step=0 state and lazily fire FormStarted on first interaction.
+  useEffect(() => {
+    if (!hydrated) return;
+    if (f.step === 0) f.goto(1);
     track("FormStarted");
-    if (!f.tier) f.setField("tier", "site");
-    f.goto(1);
-  };
+  }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canContinue = useMemo(() => {
     switch (step) {
@@ -109,21 +110,6 @@ export default function Configurator() {
   return (
     <section id="configurator" className="py-20 md:py-28 spotlight">
       <div className="container-x max-w-[1080px]">
-        {step === 0 && (
-          <div className="text-center">
-            <h2 className="max-w-[20ch] mx-auto">
-              Conta-nos sobre <span className="italic-accent">o teu projeto</span>
-            </h2>
-            <p className="mt-6 text-gray-300 text-body-lg max-w-[52ch] mx-auto">
-              3 minutos para construir a tua direção. Vê o resultado antes de pagar.
-            </p>
-            <button onClick={start} className="btn-primary mt-10">
-              Começar configuração →
-            </button>
-            <p className="mt-4 text-gray-500 text-body-sm">Sem compromisso. Pode sair a qualquer momento.</p>
-          </div>
-        )}
-
         {step >= 1 && step <= 7 && (
           <>
             <div className="flex items-center justify-between mb-3 text-body-sm">
@@ -189,7 +175,7 @@ function Step1() {
   const list: { id: Tier; tag?: string }[] = [
     { id: "page" },
     { id: "site", tag: "Mais Popular" },
-    { id: "brand" },
+    { id: "backoffice" },
   ];
   return (
     <div>
@@ -224,8 +210,8 @@ function Step2() {
   const { style, setField } = useForm();
   return (
     <div>
-      <h3 className="text-3xl md:text-h2 max-w-[18ch]" style={{ fontWeight: 500, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-        Que estilo te <span className="italic-accent">identifica</span> mais?
+      <h3 className="text-3xl md:text-h2 max-w-[20ch]" style={{ fontWeight: 500, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
+        Que estilo se <span className="italic-accent">identifica</span> mais consigo?
       </h3>
       <div className="mt-10 grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
         {styles.map((s) => {

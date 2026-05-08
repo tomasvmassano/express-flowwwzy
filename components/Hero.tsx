@@ -3,17 +3,6 @@
 import Logo from "./Logo";
 import { motion } from "framer-motion";
 
-const screenshots = [
-  { name: "Santa Justa", category: "Restauração", color: "#2A1810" },
-  { name: "Kech Pics", category: "Fotografia", color: "#1A1A2E" },
-  { name: "Dental Crafters", category: "Saúde", color: "#0F2027" },
-  { name: "SFBA Advogados", category: "Jurídico", color: "#1B1B2F" },
-  { name: "A Merendeira", category: "Comércio", color: "#2D1B14" },
-  { name: "Herdade dos Moreiros", category: "Hospitalidade", color: "#1F2937" },
-];
-
-const trustLogos = ["Tech Fusion", "Informal Labs", "Kech Pics", "Deserve", "Santa Justa", "SFBA"];
-
 export default function Hero() {
   const scrollToConfigurator = () => {
     document.getElementById("configurator")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -91,66 +80,7 @@ export default function Hero() {
         >
           Sem reuniões. Sem chamadas. Garantia de devolução de 14 dias.
         </motion.p>
-
-        {/* Trust strip */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.7 }}
-          className="mt-16 md:mt-20 border-t border-divider pt-8"
-        >
-          <p className="text-body-sm text-gray-500 mb-5">
-            Construído pela equipa por trás da <span className="text-white">Flowwwzy</span>
-          </p>
-          <div className="flex flex-wrap items-center gap-x-10 gap-y-5">
-            {trustLogos.map((name) => (
-              <span
-                key={name}
-                className="text-gray-300 text-base md:text-lg font-semibold opacity-60 hover:opacity-100 transition-opacity duration-300"
-                style={{ letterSpacing: "-0.01em" }}
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Marquee of project screenshots */}
-      <div className="mt-16 md:mt-24 marquee">
-        <div className="marquee-track gap-6 px-4">
-          {[...screenshots, ...screenshots].map((s, i) => (
-            <ProjectCard key={i} {...s} />
-          ))}
-        </div>
       </div>
     </section>
-  );
-}
-
-function ProjectCard({ name, category, color }: { name: string; category: string; color: string }) {
-  return (
-    <div className="card-dark overflow-hidden flex-shrink-0 w-[320px] md:w-[420px]" data-cursor="view">
-      <div
-        className="relative aspect-[16/10] flex items-end p-5"
-        style={{
-          background: `linear-gradient(135deg, ${color} 0%, #050505 100%)`,
-        }}
-      >
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage:
-            "radial-gradient(circle at 30% 30%, rgba(250,235,227,0.18) 0%, transparent 40%)",
-        }} />
-        <div className="absolute top-4 left-4 right-4 flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-divider" />
-          <span className="w-2 h-2 rounded-full bg-divider" />
-          <span className="w-2 h-2 rounded-full bg-divider" />
-        </div>
-        <div className="relative">
-          <div className="text-white font-semibold text-lg">{name}</div>
-          <div className="text-gray-500 text-body-sm">{category}</div>
-        </div>
-      </div>
-    </div>
   );
 }

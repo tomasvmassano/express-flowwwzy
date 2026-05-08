@@ -7,19 +7,19 @@ const steps = [
     n: "01",
     title: "Escolha a sua direção",
     body:
-      "Escolhe o estilo, as cores, o tom. Mostra-nos 3 sites que adoras. Usamos os teus inputs para criar algo que combina com a tua marca, não um template que serve toda a gente.",
+      "Escolha o estilo, as cores, o tom. Mostre-nos 3 sites que adora. Usamos os seus inputs para criar algo que combina com a sua marca — não um template que serve toda a gente.",
   },
   {
     n: "02",
-    title: "Nós desenhamos e construímos",
+    title: "Desenhamos e construímos",
     body:
-      "Uma equipa sénior constrói o teu site em 72 horas. Layout personalizado, copy se precisares, totalmente responsivo, rápido em mobile, pronto a converter.",
+      "Uma equipa sénior constrói o seu site em poucos dias. Layout personalizado, copy se precisar, totalmente responsivo, rápido em mobile, pronto a converter.",
   },
   {
     n: "03",
     title: "Revisão, ajustes, lançamento",
     body:
-      "Uma ronda de revisões incluída. Quando aprovas, lançamos. Recebes os acessos completos e 14 dias de suporte pós-lançamento.",
+      "Uma ronda de revisões incluída. Quando aprova, lançamos. Recebe os acessos completos e 14 dias de suporte pós-lançamento.",
   },
 ];
 

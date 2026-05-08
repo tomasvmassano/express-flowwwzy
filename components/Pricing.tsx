@@ -42,17 +42,18 @@ const tiers: {
     popular: true,
   },
   {
-    id: "brand",
-    name: "Express Brand",
+    id: "backoffice",
+    name: "Express Backoffice",
     price: 1490,
     features: [
       "Tudo no Express Site",
-      "Logo + sistema de cores + tipografia",
-      "Manual de marca de 1 página",
+      "Backoffice à medida (gestão de leads, clientes ou conteúdo)",
+      "Login seguro e área privada",
+      "Integração com o site",
       "Até 7 páginas no site",
-      "Entrega em 7 dias",
+      "Entrega em 10 dias",
     ],
-    ideal: "Ideal para: novos negócios, rebrands, quem quer marca + site juntos",
+    ideal: "Ideal para: negócios que precisam de site + ferramenta interna para operar",
   },
 ];
 

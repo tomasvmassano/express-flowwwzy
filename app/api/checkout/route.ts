@@ -18,11 +18,18 @@ export async function POST(req: Request) {
     const stripe = new Stripe(STRIPE_KEY);
 
     const tierName =
-      tier === "page" ? "Express Page" : tier === "site" ? "Express Site" : tier === "brand" ? "Express Brand" : "Flowwwzy Express";
+      tier === "page" ? "Express Page"
+        : tier === "site" ? "Express Site"
+        : tier === "backoffice" ? "Express Backoffice"
+        : "Flowwwzy Express";
 
     const lineItems: { price_data: { currency: string; product_data: { name: string; description?: string }; unit_amount: number }; quantity: number }[] = [];
 
-    const basePrice = tier === "page" ? 49000 : tier === "site" ? 89000 : tier === "brand" ? 149000 : 49000;
+    const basePrice =
+      tier === "page" ? 49000
+        : tier === "site" ? 89000
+        : tier === "backoffice" ? 149000
+        : 49000;
     lineItems.push({
       price_data: {
         currency: "eur",
