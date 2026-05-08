@@ -1,5 +1,4 @@
 import Hero from "@/components/Hero";
-import VideoSection from "@/components/VideoSection";
 import ProblemAgitation from "@/components/ProblemAgitation";
 import HowItWorks from "@/components/HowItWorks";
 import Benefits from "@/components/Benefits";
@@ -16,13 +15,12 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 
 // Section order follows the landing-page-builder skill:
 // Hero → Problem → Solution → Benefits → Proof → Objections → Offer → Final CTA
-// VSL sits right after Hero — strongest spot for "this is a real human studio".
+// VSL is now the protagonist of the hero itself.
 export default function HomePage() {
   return (
     <>
       <main>
         <Hero />
-        <VideoSection />
         <ProblemAgitation />
         <HowItWorks />
         <Benefits />
