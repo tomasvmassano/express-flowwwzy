@@ -4,16 +4,32 @@
  * Returns the screenshot as a Buffer + content type. The matcher and
  * analyzer never see Apify-specific shapes; if we swap providers later,
  * only this file changes.
+ *
+ * The actor produces full-page renders that often exceed Claude vision's
+ * 5MB limit (e.g. studio-mcgee.com came back at 7950×8827, 5.4MB). We
+ * resize down to a max edge of 1600px and convert to JPEG before
+ * returning, which gives Claude all the visual detail it needs while
+ * staying comfortably under the API limit.
  */
+
+import sharp from "sharp";
 
 const APIFY_BASE = "https://api.apify.com/v2";
 const ACTOR_ID = "apify~screenshot-url";
 
+const MAX_EDGE_PX = 1600;
+const JPEG_QUALITY = 82;
+
 export type Screenshot = {
   buffer: Buffer;
-  contentType: "image/png";
+  /** After resize the output is JPEG (smaller, still high quality for vision) */
+  contentType: "image/jpeg";
   /** Where the screenshot lives in Apify's KV store — kept for cache/debug */
   apifyUrl: string;
+  /** Final dimensions after resize, for logging/audit */
+  dimensions: { width: number; height: number };
+  /** Final byte size after resize */
+  byteSize: number;
 };
 
 export async function takeScreenshot(url: string): Promise<Screenshot> {
@@ -62,7 +78,23 @@ export async function takeScreenshot(url: string): Promise<Screenshot> {
   const imgUrl = `${APIFY_BASE}/key-value-stores/${storeId}/records/${imgKey}?token=${token}`;
   const imgRes = await fetch(imgUrl);
   if (!imgRes.ok) throw new Error(`Screenshot fetch failed: ${imgRes.status}`);
-  const buffer = Buffer.from(await imgRes.arrayBuffer());
+  const rawBuffer = Buffer.from(await imgRes.arrayBuffer());
 
-  return { buffer, contentType: "image/png", apifyUrl: imgUrl };
+  // 4) Resize + recompress so vision API never gets oversized inputs.
+  const pipeline = sharp(rawBuffer).resize({
+    width: MAX_EDGE_PX,
+    height: MAX_EDGE_PX,
+    fit: "inside",
+    withoutEnlargement: true,
+  });
+  const resized = await pipeline.jpeg({ quality: JPEG_QUALITY, progressive: true }).toBuffer();
+  const meta = await sharp(resized).metadata();
+
+  return {
+    buffer: resized,
+    contentType: "image/jpeg",
+    apifyUrl: imgUrl,
+    dimensions: { width: meta.width || 0, height: meta.height || 0 },
+    byteSize: resized.length,
+  };
 }

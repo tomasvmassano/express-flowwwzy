@@ -36,7 +36,8 @@ Devolve via a ferramenta extract_design_dna. Não respondas em texto livre.`;
 
 export async function analyzeScreenshot(
   imageBase64: string,
-  url: string
+  url: string,
+  mediaType: "image/png" | "image/jpeg" = "image/jpeg"
 ): Promise<{ dna: ExtractedDNA; rawJson: string }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
@@ -67,7 +68,7 @@ export async function analyzeScreenshot(
             type: "image",
             source: {
               type: "base64",
-              media_type: "image/png",
+              media_type: mediaType,
               data: imageBase64,
             },
           },

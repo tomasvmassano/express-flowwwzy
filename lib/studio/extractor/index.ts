@@ -35,7 +35,8 @@ export async function extractReferenceDNA(url: string): Promise<ExtractResult> {
   const tAnalyze = Date.now();
   const { dna: extracted, rawJson } = await analyzeScreenshot(
     shot.buffer.toString("base64"),
-    url
+    url,
+    shot.contentType
   );
   const analyzeMs = Date.now() - tAnalyze;
 
