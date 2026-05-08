@@ -5,6 +5,7 @@ import Portfolio from "@/components/Portfolio";
 import Pricing from "@/components/Pricing";
 import WhoFor from "@/components/WhoFor";
 import FAQ from "@/components/FAQ";
+import Founder from "@/components/Founder";
 import Configurator from "@/components/Configurator";
 import PreviewScreen from "@/components/PreviewScreen";
 import Footer from "@/components/Footer";
@@ -20,6 +21,7 @@ export default function HomePage() {
         <Portfolio />
         <Pricing />
         <WhoFor />
+        <Founder />
         <FAQ />
         <Configurator />
         <PreviewScreen />

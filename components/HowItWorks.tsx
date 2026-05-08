@@ -62,7 +62,7 @@ export default function HowItWorks() {
           className="italic-accent text-base md:text-lg mt-12 md:mt-16 max-w-[60ch]"
           style={{ color: "var(--gray-300)" }}
         >
-          O nosso processo combina design sénior com um sistema de produção interno alimentado por IA. O resultado: trabalho à medida à velocidade de um template.
+          Um processo afinado por mais de 60 projetos. Cada passo tem o seu lugar, sem improvisos. Trabalho à medida à velocidade que normalmente só vê em templates.
         </motion.p>
       </div>
     </section>

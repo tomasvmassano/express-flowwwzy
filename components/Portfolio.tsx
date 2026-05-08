@@ -2,50 +2,22 @@
 
 import { motion } from "framer-motion";
 
-const projects = [
-  {
-    name: "Santa Justa Restaurante",
-    category: "Restauração",
-    quote: "Identidade digital que reflete a alma do restaurante.",
-    color: "#2A1810",
-    accent: "#C9A876",
-  },
-  {
-    name: "SFBA Advogados",
-    category: "Serviços jurídicos",
-    quote: "Presença online à altura da firma.",
-    color: "#0E1B2C",
-    accent: "#4A7DAB",
-  },
-  {
-    name: "Kech Pics",
-    category: "Fotografia & Criativos",
-    quote: "Você transformou a nossa marca. Conseguimos duplicar a base de clientes.",
-    author: "Omar Abouzrar",
-    color: "#1A1A2E",
-    accent: "#FAEBE3",
-  },
-  {
-    name: "Dental Crafters",
-    category: "Saúde & Clínicas",
-    quote: "Uma marca que comunica confiança e modernidade.",
-    color: "#0F2027",
-    accent: "#88C8E0",
-  },
-  {
-    name: "A Merendeira",
-    category: "Comércio local",
-    quote: "Site rápido, claro, e que vende todos os dias.",
-    color: "#2D1B14",
-    accent: "#E8B871",
-  },
-  {
-    name: "Herdade dos Moreiros",
-    category: "Hospitalidade & Turismo",
-    quote: "Da experiência rural à experiência digital.",
-    color: "#1F2920",
-    accent: "#A8B89A",
-  },
+type Project = {
+  slug: string;
+  name: string;
+  category: string;
+  url?: string;
+  color: string;
+  accent: string;
+};
+
+const projects: Project[] = [
+  { slug: "santa-justa", name: "Santa Justa", category: "Restauração", color: "#2A1810", accent: "#C9A876" },
+  { slug: "sfba-advogados", name: "SFBA Advogados", category: "Serviços jurídicos", color: "#0E1B2C", accent: "#4A7DAB" },
+  { slug: "kech-pics", name: "Kech Pics", category: "Fotografia & Criativos", color: "#1A1A2E", accent: "#FAEBE3" },
+  { slug: "dental-crafters", name: "Dental Crafters", category: "Saúde & Clínicas", color: "#0F2027", accent: "#88C8E0" },
+  { slug: "a-merendeira", name: "A Merendeira", category: "Comércio local", color: "#2D1B14", accent: "#E8B871" },
+  { slug: "herdade-dos-moreiros", name: "Herdade dos Moreiros", category: "Hospitalidade & Turismo", color: "#1F2920", accent: "#A8B89A" },
 ];
 
 export default function Portfolio() {
@@ -65,7 +37,7 @@ export default function Portfolio() {
         <div className="mt-14 md:mt-20 grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {projects.map((p, i) => (
             <motion.div
-              key={p.name}
+              key={p.slug}
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
@@ -75,45 +47,43 @@ export default function Portfolio() {
             >
               <div
                 className="aspect-[4/3] relative overflow-hidden"
-                style={{
-                  background: `linear-gradient(140deg, ${p.color} 0%, #050505 100%)`,
-                }}
+                style={{ background: `linear-gradient(140deg, ${p.color} 0%, #050505 100%)` }}
               >
-                <div
-                  className="absolute inset-0 opacity-50 group-hover:opacity-70 transition-opacity duration-500"
-                  style={{
-                    backgroundImage: `radial-gradient(circle at 25% 25%, ${p.accent}30 0%, transparent 50%)`,
+                {/* Real image — fails silently to gradient if file missing */}
+                <img
+                  src={`/images/projects/${p.slug}.jpg`}
+                  alt={`${p.name} — ${p.category}`}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = "none";
                   }}
                 />
-                <div className="absolute top-5 left-5 right-5 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ background: p.accent, opacity: 0.6 }} />
-                    <span className="w-2 h-2 rounded-full bg-divider" />
-                    <span className="w-2 h-2 rounded-full bg-divider" />
-                  </div>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-500">live</span>
-                </div>
-                <div className="absolute bottom-6 left-6">
-                  <div className="text-white font-semibold text-2xl mb-1" style={{ letterSpacing: "-0.01em" }}>
-                    {p.name.split(" ")[0]}
-                  </div>
-                  <div className="h-px w-12" style={{ background: p.accent, opacity: 0.6 }} />
-                </div>
+                {/* Decorative overlay shows when image is missing or for tone */}
+                <div
+                  className="absolute inset-0 pointer-events-none opacity-40 group-hover:opacity-30 transition-opacity duration-500"
+                  style={{ backgroundImage: `radial-gradient(circle at 25% 25%, ${p.accent}30 0%, transparent 55%)` }}
+                />
               </div>
-              <div className="p-6 md:p-7">
-                <div className="flex items-baseline justify-between mb-3 gap-3">
-                  <h3 className="text-base font-semibold" style={{ letterSpacing: "-0.01em" }}>
+              <div className="p-6 md:p-7 flex items-baseline justify-between gap-4">
+                <div>
+                  <h3 className="text-base md:text-lg font-semibold" style={{ letterSpacing: "-0.01em" }}>
                     {p.name}
                   </h3>
-                  <span className="label" style={{ fontSize: "10px" }}>
-                    {p.category}
-                  </span>
+                  <span className="text-gray-500 text-body-sm mt-0.5 block">{p.category}</span>
                 </div>
-                <p className="text-gray-300 text-body-sm leading-relaxed italic">"{p.quote}"</p>
-                {p.author && <p className="text-gray-500 text-body-sm mt-2">— {p.author}</p>}
-                <a className="mt-5 inline-flex text-body-sm text-cream link-underline" href="#">
-                  Ver projeto →
-                </a>
+                {p.url ? (
+                  <a
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener"
+                    className="text-body-sm text-cream link-underline whitespace-nowrap"
+                  >
+                    Ver projeto →
+                  </a>
+                ) : (
+                  <span className="text-body-sm text-gray-500 whitespace-nowrap">Em destaque</span>
+                )}
               </div>
             </motion.div>
           ))}

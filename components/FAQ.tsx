@@ -9,7 +9,7 @@ const faqs = [
   },
   {
     q: "Como conseguem ser tão rápidos?",
-    a: "Usamos um sistema de produção interno alimentado por IA que trata das partes repetitivas de construir um site. Um designer sénior lidera cada projeto, toma todas as decisões criativas e revê todos os outputs. Recebe trabalho à medida à velocidade de um template.",
+    a: "Combinamos um processo de produção interno extremamente afinado com uma equipa que só faz isto, todos os dias. Cada projeto segue uma sequência clara, sem reuniões inúteis e sem fricção. O resultado é simples: o que numa agência demora meses, aqui demora dias.",
   },
   {
     q: "E se eu não gostar do resultado?",
