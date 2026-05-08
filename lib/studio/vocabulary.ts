@@ -147,6 +147,8 @@ export const COMPONENT_CATEGORIES = [
   "blog",
   "pricing",
   "stats",
+  "logos",
+  "process",
   "cta",
   "footer",
   "navigation",

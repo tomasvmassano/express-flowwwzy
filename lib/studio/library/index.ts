@@ -345,7 +345,292 @@ export const LIBRARY: ComponentManifest[] = [
   },
 
   // ─────────────────────────────────────────────────────────────────────
-  // FOOTER
+  // PRICING (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "pricing-3tier-comparison",
+    name: "Pricing — 3-Tier Comparison",
+    category: "pricing",
+    moodTags: ["clean", "editorial", "tech", "minimalista"],
+    tone: { profCasual: 35, calmBold: 50, classicModern: 60 },
+    typography: { primary: "sans-geometric", pairing: "single", feel: "neutral", expressiveness: 2 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "centered",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/pricing/Pricing3TierComparison.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "royal", "coastal", "forest"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "tiers", label: "3 tiers (nome, preço, features, CTA, highlighted)", type: "list", required: true },
+      { key: "footnote", label: "Footnote (ex: garantia)", type: "text-short", required: false, maxChars: 120 },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // STATS (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "stats-metrics-row",
+    name: "Stats — Metrics Row",
+    category: "stats",
+    moodTags: ["bold", "clean", "editorial", "tech"],
+    tone: { profCasual: 40, calmBold: 65, classicModern: 65 },
+    typography: { primary: "sans-grotesque", pairing: "single", feel: "industrial", expressiveness: 4 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/stats/StatsMetricsRow.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "bold-red", "royal", "coastal"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline (opcional)", type: "text-short", required: false, maxChars: 90 },
+      { key: "stats", label: "Lista de stats (value + label + bar opcional 0-100)", type: "list", required: true },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // LOGOS (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "logos-press-strip",
+    name: "Logos — Press / Clients Strip",
+    category: "logos",
+    moodTags: ["minimalista", "clean", "editorial"],
+    tone: { profCasual: 35, calmBold: 25, classicModern: 55 },
+    typography: { primary: "sans-geometric", pairing: "single", feel: "neutral", expressiveness: 1 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#FAFAFA", "#8B8B8B"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "centered",
+    imagery: { style: "abstract", treatment: "raw", showsPeople: false },
+    motion: "calm",
+    filePath: "components/library/logos/LogosPressStrip.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "warm-sand", "coastal", "forest", "royal"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline (ex: 'As featured in')", type: "text-short", required: false, maxChars: 80 },
+      { key: "logos", label: "Lista de logos (name + imageUrl opcional + href)", type: "list", required: true },
+      { key: "variant", label: "Layout: 'grid' ou 'marquee'", type: "text-short", required: false, maxChars: 10 },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // BLOG (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "articles-grid-3col",
+    name: "Articles — 3-Column Grid",
+    category: "blog",
+    moodTags: ["editorial", "clean", "suave"],
+    tone: { profCasual: 40, calmBold: 30, classicModern: 50 },
+    typography: { primary: "serif-modern", pairing: "serif-sans-pair", feel: "elegant", expressiveness: 3 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "left",
+    imagery: { style: "photographic", treatment: "graded", showsPeople: false },
+    motion: "calm",
+    filePath: "components/library/blog/ArticlesGrid3Col.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "warm-sand", "forest", "royal", "mono-plus", "coastal"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "articles", label: "Lista de artigos (título, excerpt, imagem, categoria, data, href, readTime)", type: "list", required: true },
+      { key: "viewAllLabel", label: "Texto do CTA 'Ver todos'", type: "text-short", required: false, maxChars: 30 },
+      { key: "viewAllHref", label: "Destino do CTA 'Ver todos'", type: "url", required: false },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // SERVICES — variant (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "services-numbered-expanded",
+    name: "Services — Numbered + Expanded Detail",
+    category: "services",
+    moodTags: ["editorial", "bold", "luxurious"],
+    tone: { profCasual: 30, calmBold: 50, classicModern: 55 },
+    typography: { primary: "serif-modern", pairing: "serif-sans-pair", feel: "elegant", expressiveness: 4 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/services/ServicesNumberedExpanded.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "warm-sand", "forest", "royal", "mono-plus"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "services", label: "Serviços (título, descrição, capabilities[], resources[])", type: "list", required: true },
+      { key: "defaultOpen", label: "Índice da row aberta por defeito", type: "stat", required: false },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // CTA (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "cta-banner-closing",
+    name: "CTA — Closing Banner",
+    category: "cta",
+    moodTags: ["bold", "minimalista", "editorial"],
+    tone: { profCasual: 40, calmBold: 65, classicModern: 65 },
+    typography: { primary: "sans-grotesque", pairing: "single", feel: "industrial", expressiveness: 4 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "centered",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/cta/CtaBannerClosing.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "bold-red", "royal", "coastal", "forest"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline manifesto", type: "text-short", required: true, maxChars: 110 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 200 },
+      { key: "primaryCtaLabel", label: "CTA principal", type: "text-short", required: true, maxChars: 24 },
+      { key: "primaryCtaHref", label: "CTA principal — destino", type: "url", required: false },
+      { key: "secondaryCtaLabel", label: "CTA secundário", type: "text-short", required: false, maxChars: 24 },
+      { key: "secondaryCtaHref", label: "CTA secundário — destino", type: "url", required: false },
+      { key: "variant", label: "'centered' ou 'island'", type: "text-short", required: false, maxChars: 10 },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // GALLERY (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "gallery-image-grid",
+    name: "Gallery — Mixed-Size Image Grid",
+    category: "gallery",
+    moodTags: ["caloroso", "editorial", "organic", "luxurious"],
+    tone: { profCasual: 50, calmBold: 35, classicModern: 50 },
+    typography: { primary: "serif-modern", pairing: "serif-sans-pair", feel: "humanist", expressiveness: 3 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "left",
+    imagery: { style: "photographic", treatment: "graded", showsPeople: true },
+    motion: "calm",
+    filePath: "components/library/gallery/GalleryImageGrid.tsx",
+    exportName: "default",
+    compatiblePalettes: ["warm-sand", "forest", "black-cream", "coastal", "sunset", "royal"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline (opcional)", type: "text-short", required: false, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "items", label: "Imagens (imageUrl, title, category, href, shape: tall/wide/square)", type: "list", required: true },
+      { key: "viewAllLabel", label: "CTA 'Ver tudo'", type: "text-short", required: false, maxChars: 30 },
+      { key: "viewAllHref", label: "CTA destino", type: "url", required: false },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // PROCESS (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "process-vertical-timeline",
+    name: "Process — Vertical Timeline",
+    category: "process",
+    moodTags: ["clean", "tech", "editorial", "minimalista"],
+    tone: { profCasual: 35, calmBold: 45, classicModern: 60 },
+    typography: { primary: "sans-geometric", pairing: "single", feel: "neutral", expressiveness: 2 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/process/ProcessVerticalTimeline.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "coastal", "royal", "forest"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "steps", label: "Passos (title, description, meta opcional)", type: "list", required: true },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // TESTIMONIALS — variant (Lote 2)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "testimonials-single-navigated",
+    name: "Testimonials — Single Quote + Arrows",
+    category: "testimonials",
+    moodTags: ["editorial", "luxurious", "suave"],
+    tone: { profCasual: 25, calmBold: 35, classicModern: 50 },
+    typography: { primary: "serif-display", pairing: "display-body-pair", feel: "elegant", expressiveness: 4 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "centered",
+    imagery: { style: "photographic", treatment: "graded", showsPeople: true },
+    motion: "snappy",
+    filePath: "components/library/testimonials/TestimonialsSingleNavigated.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "warm-sand", "mono-plus", "royal", "forest", "sunset"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "testimonials", label: "Testemunhos (quote, author, role, company, avatarUrl, logoUrl)", type: "list", required: true },
+    ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // FOOTER (Lote 1 + variant Lote 2)
   // ─────────────────────────────────────────────────────────────────────
   {
     id: "footer-minimal-3col",
@@ -380,6 +665,36 @@ export const LIBRARY: ComponentManifest[] = [
       { key: "copyright", label: "Linha de copyright", type: "text-short", required: false, maxChars: 100 },
       { key: "legalLinks", label: "Links legais", type: "list", required: false },
     ],
+  },
+  {
+    id: "footer-wordmark-bold",
+    name: "Footer — Massive Wordmark",
+    category: "footer",
+    moodTags: ["bold", "brutalist", "editorial", "minimalista"],
+    tone: { profCasual: 35, calmBold: 75, classicModern: 65 },
+    typography: { primary: "sans-grotesque", pairing: "single", feel: "industrial", expressiveness: 5 },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "tight",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "static",
+    filePath: "components/library/footer/FooterWordmarkBold.tsx",
+    exportName: "default",
+    compatiblePalettes: ["mono-plus", "black-cream", "bold-red", "royal"],
+    slots: [
+      { key: "brandName", label: "Nome da marca (wordmark gigante)", type: "text-short", required: true, maxChars: 30 },
+      { key: "tagline", label: "Tagline", type: "text-short", required: false, maxChars: 200 },
+      { key: "columns", label: "Colunas de links", type: "list", required: true },
+      { key: "socialLinks", label: "Redes sociais", type: "list", required: false },
+      { key: "copyright", label: "Linha de copyright", type: "text-short", required: false, maxChars: 100 },
+      { key: "legalLinks", label: "Links legais", type: "list", required: false },
+    ],
+    notes: "Wordmark full-bleed na base puxa o olho para o logo. Best com nome curto (≤12 chars).",
   },
 ];
 
