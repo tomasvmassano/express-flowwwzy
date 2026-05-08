@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </Script>
         )}
       </head>
-      <body className="cursor-cream">
+      <body>
         {GTM_ID && (
           <noscript>
             <iframe
@@ -54,7 +54,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             />
           </noscript>
         )}
-        <div id="cream-cursor" />
         <CursorAndAnalytics />
         {children}
       </body>

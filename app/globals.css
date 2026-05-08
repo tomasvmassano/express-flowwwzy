@@ -193,30 +193,7 @@ h3, .h3 {
   100% { transform: translateX(-50%); }
 }
 
-/* Custom cursor */
-.cursor-cream { cursor: none; }
-@media (max-width: 991px) {
-  .cursor-cream { cursor: pointer; }
-}
-
-#cream-cursor {
-  position: fixed;
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: var(--cream);
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%) scale(0);
-  transition: transform 300ms cubic-bezier(.165,.84,.44,1), width 200ms, height 200ms;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--black);
-  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
-  text-transform: uppercase;
-  mix-blend-mode: normal;
-}
-#cream-cursor.active { transform: translate(-50%, -50%) scale(1); }
-#cream-cursor.large { width: 88px; height: 88px; }
-@media (max-width: 991px) { #cream-cursor { display: none; } }
+/* System cursor stays visible — Express variant overrides the brand's hidden-cursor signature. */
 
 /* Scroll reveal */
 .reveal { opacity: 0; transform: translateY(20px); transition: opacity 500ms cubic-bezier(.165,.84,.44,1), transform 500ms cubic-bezier(.165,.84,.44,1); }
