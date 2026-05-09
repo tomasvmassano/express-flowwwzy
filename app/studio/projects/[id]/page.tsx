@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import StateBadge from "../_lib/StateBadge";
+import BrandGuidelinesSection from "../_lib/BrandGuidelinesSection";
 import type { Project, ProjectReference, ProjectState } from "@/lib/studio/project/types";
 import { canTransition } from "@/lib/studio/project/types";
 import { COMPONENT_CATEGORIES, FORM_EXPOSED_MOODS, PALETTES } from "@/lib/studio/vocabulary";
@@ -126,6 +127,7 @@ export default function ProjectDetailPage() {
               </Section>
 
               <FormSection project={project} onPatch={patch} saving={saving} />
+              <BrandGuidelinesSection project={project} onPatch={patch} />
               <ReferencesSection project={project} onPatch={patch} onReload={load} />
               <PlanSection project={project} />
             </div>

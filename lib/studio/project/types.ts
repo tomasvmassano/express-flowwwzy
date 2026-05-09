@@ -20,6 +20,7 @@
 import { z } from "zod";
 import { Tier } from "@/lib/types";
 import { ReferenceDNASchema } from "@/lib/studio/types";
+import { ExtractedBrandGuidelinesSchema } from "@/lib/studio/brand/types";
 import {
   COMPONENT_CATEGORIES,
   PALETTE_IDS,
@@ -65,26 +66,27 @@ export const ProjectReferenceSchema = z.object({
 
 export type ProjectReference = z.infer<typeof ProjectReferenceSchema>;
 
-// ─── Brand guidelines (uploaded by client, AI-parsed) ──────────────────
+// ─── Brand guidelines ──────────────────────────────────────────────────
 
 export const BrandGuidelinesSchema = z.object({
-  /** Public Vercel Blob URL of the uploaded file */
-  fileUrl: z.string().url(),
-  /** Original filename */
-  filename: z.string(),
-  /** Bytes */
-  size: z.number().int().nonnegative(),
-  /** MIME */
-  mediaType: z.string(),
-  /** Set after AI parsing */
-  parsed: z
-    .object({
-      summary: z.string(),
-      colors: z.array(z.string()),
-      fonts: z.array(z.string()),
-      tone: z.string().optional(),
-    })
-    .optional(),
+  /** Where the guidelines came from. URL = extracted from existing site;
+   *  upload = client uploaded a PDF/image (V2 file uploads). */
+  source: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("url"), url: z.string().url() }),
+    z.object({
+      type: z.literal("upload"),
+      fileUrl: z.string().url(),
+      filename: z.string(),
+      size: z.number().int().nonnegative(),
+      mediaType: z.string(),
+    }),
+  ]),
+  /** When the extraction completed */
+  capturedAt: z.string(),
+  /** The structured guidelines manual */
+  extracted: ExtractedBrandGuidelinesSchema,
+  /** Optional snapshot of CSS tokens for audit (color frequencies, etc.) */
+  cssTokens: z.unknown().optional(),
 });
 
 export type BrandGuidelines = z.infer<typeof BrandGuidelinesSchema>;
