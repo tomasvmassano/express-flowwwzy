@@ -163,6 +163,8 @@ export default function ProjectDetailPage() {
                 </p>
               </div>
 
+              <GenerateBox project={project} onChange={load} />
+
               <div className="border border-red-950 rounded-lg bg-red-950/20 p-4">
                 <h3 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-red-300 mb-3">
                   Danger zone
@@ -522,6 +524,66 @@ function ReferencesSection({
         </button>
       </div>
     </Section>
+  );
+}
+
+function GenerateBox({ project, onChange }: { project: Project; onChange: () => void }) {
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<{ deployedUrl?: string; inspectorUrl?: string; error?: string } | null>(null);
+  const ready = project.state === "audited" || project.state === "failed";
+  const hasPlan = !!project.plan && project.plan.sections.length > 0;
+
+  async function run() {
+    setRunning(true);
+    setResult(null);
+    try {
+      const res = await fetch(`/api/studio/projects/${project.id}/generate`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setResult({ error: data?.message || data?.error || `error ${res.status}` });
+        return;
+      }
+      setResult({ deployedUrl: data.deployedUrl, inspectorUrl: data.inspectorUrl });
+    } catch (e) {
+      setResult({ error: String(e) });
+    } finally {
+      setRunning(false);
+      onChange();
+    }
+  }
+
+  return (
+    <div className="border border-[#2A2A2A] rounded-lg bg-[#0F0F0F] p-4">
+      <h3 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#888] mb-3">Generate</h3>
+      {!hasPlan && <p className="text-[11px] text-[#666] mb-3">No plan yet — define one before generating.</p>}
+      {hasPlan && !ready && (
+        <p className="text-[11px] text-[#666] mb-3">Project must be in state <code>audited</code> to generate. Current: <code>{project.state}</code>.</p>
+      )}
+      <button
+        onClick={run}
+        disabled={!hasPlan || !ready || running}
+        className="w-full px-3 py-2 rounded bg-[#FAFAFA] text-black text-xs font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[#E0E0E0] transition-colors"
+      >
+        {running ? "Generating + deploying…" : "Generate & deploy"}
+      </button>
+      {result?.deployedUrl && (
+        <div className="mt-3 p-2 rounded bg-emerald-950/40 text-emerald-300 text-[11px]">
+          ✓ Deployed: <a href={result.deployedUrl} target="_blank" rel="noopener" className="underline">{result.deployedUrl}</a>
+          {result.inspectorUrl && (
+            <> · <a href={result.inspectorUrl} target="_blank" rel="noopener" className="underline">inspector</a></>
+          )}
+        </div>
+      )}
+      {result?.error && (
+        <div className="mt-3 p-2 rounded bg-red-950/40 text-red-300 text-[11px] break-words">
+          {result.error}
+        </div>
+      )}
+      <p className="mt-3 text-[10px] text-[#555] leading-relaxed">
+        Generates the project files, deploys to your Vercel account, returns URL.
+        Build typically completes in 30-90s.
+      </p>
+    </div>
   );
 }
 
