@@ -23,11 +23,31 @@ let _redis: Redis | null = null;
 
 function getRedis(): Redis {
   if (_redis) return _redis;
-  const url = process.env.KV_REST_API_URL;
-  const token = process.env.KV_REST_API_TOKEN;
+
+  // Vercel Marketplace integration injects KV_REST_API_URL/_TOKEN.
+  // Direct Upstash dashboard uses UPSTASH_REDIS_REST_URL/_TOKEN.
+  // Accept either so the user doesn't have to rename anything.
+  const url =
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.STORAGE_KV_REST_API_URL;
+  const token =
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.STORAGE_KV_REST_API_TOKEN;
+
   if (!url || !token) {
+    const present = Object.keys(process.env)
+      .filter((k) => /KV_|UPSTASH|REDIS|STORAGE/i.test(k))
+      .sort();
     throw new Error(
-      "Upstash Redis not configured. Set KV_REST_API_URL and KV_REST_API_TOKEN — Vercel Marketplace → Storage → Upstash Redis injects these automatically."
+      `Upstash Redis not configured. Need one of:
+  - KV_REST_API_URL + KV_REST_API_TOKEN (Vercel Marketplace → Storage → Upstash Redis)
+  - UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN (direct Upstash dashboard)
+
+Storage-related env vars currently visible: ${present.length ? present.join(", ") : "(none)"}.
+
+If you connected Upstash via Vercel's Marketplace and don't see KV_* vars, the database was likely created but not connected to the express-flowwwzy project — go to Vercel → Storage tab → click the database → Settings → Connected Projects → add express-flowwwzy. Then redeploy.`
     );
   }
   _redis = new Redis({ url, token });

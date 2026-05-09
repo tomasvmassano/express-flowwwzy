@@ -173,7 +173,7 @@ export default function ProjectsQueuePage() {
         </div>
 
         <p className="mt-3 text-[10px] text-[#555] font-mono">
-          GET /api/studio/projects · refresh: <button onClick={load} className="text-[#888] hover:text-[#CCC] underline">reload</button>
+          GET /api/studio/projects · refresh: <button onClick={load} className="text-[#888] hover:text-[#CCC] underline">reload</button> · debug: <a href="/api/studio/health" target="_blank" rel="noopener" className="text-[#888] hover:text-[#CCC] underline">health</a>
         </p>
       </main>
     </div>
