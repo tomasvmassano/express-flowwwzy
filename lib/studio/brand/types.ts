@@ -271,6 +271,18 @@ export const ExtractedBrandGuidelinesSchema = z.object({
   sectionArchetypes: z.array(SectionArchetypeSchema).default([]),
   webPrinciples: z.array(DesignPrincipleSchema).max(10).default([]),
 
+  /** Real logo PNG downloaded from the page (or rasterised from inline SVG). Optional — falls back to logo.sourceUrl if extraction failed. */
+  logoPng: z
+    .object({
+      base64: z.string(),
+      mediaType: z.literal("image/png"),
+      sourceUrl: z.string(),
+      width: z.number().int(),
+      height: z.number().int(),
+      detectedFormat: z.enum(["svg-inline", "svg", "png", "jpg", "webp", "ico", "other"]),
+    })
+    .optional(),
+
   /** Voice profile extracted from the brand's own site copy. Optional — may be absent for legacy extractions. */
   voice: VoiceProfileSchema.optional(),
 

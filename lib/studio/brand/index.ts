@@ -36,6 +36,7 @@ import {
   runPrinciplesStage,
   runCopyStage,
 } from "./stages";
+import { extractLogo, ExtractedLogo } from "./logoExtractor";
 
 // ─── Cache shapes ─────────────────────────────────────────────────────
 
@@ -67,6 +68,7 @@ type StageStatus =
 export type StageMap = {
   screenshot: StageStatus;
   htmlData: StageStatus;
+  logo: StageStatus;
   copy: StageStatus;
   identity: StageStatus;
   visuals: StageStatus;
@@ -148,6 +150,7 @@ export async function pollBrandGuidelines(
   const stages: StageMap = {
     screenshot: { state: "pending" },
     htmlData: { state: "pending" },
+    logo: { state: "pending" },
     copy: { state: "pending" },
     identity: { state: "pending" },
     visuals: { state: "pending" },
@@ -206,6 +209,31 @@ export async function pollBrandGuidelines(
       // Continue — analysis stages can still run with empty hints/css.
       html = { hints: { declaredFonts: [] }, cssTokens: emptyCssTokens(), rawHtml: "" };
     }
+  }
+
+  // ─── Stage 1.4: logo (HTML parse + download → normalised PNG) ──
+  let logo = await persistGet<ExtractedLogo>("brand-logo", url);
+  if (logo) {
+    stages.logo = { state: "done", durationMs: 0 };
+  } else if (html.rawHtml) {
+    if (Date.now() - t0 > POLL_BUDGET_MS) {
+      return runningResult(stages, t0, shot.runDurationMs);
+    }
+    const tLogo = Date.now();
+    try {
+      const found = await extractLogo(html.rawHtml, url);
+      if (found) {
+        logo = found;
+        await persistSet("brand-logo", url, logo);
+        stages.logo = { state: "done", durationMs: Date.now() - tLogo };
+      } else {
+        stages.logo = { state: "failed", error: "no logo candidate found" };
+      }
+    } catch (e) {
+      stages.logo = { state: "failed", error: String(e) };
+    }
+  } else {
+    stages.logo = { state: "failed", error: "no rawHtml available" };
   }
 
   // ─── Stage 1.5: copy (text-only, fast — uses cached rawHtml) ──
@@ -307,6 +335,16 @@ export async function pollBrandGuidelines(
       webPrinciples: fragments.principles.webPrinciples,
       voice: copyFrag?.data.voice,
       copy: copyFrag?.data.copy,
+      logoPng: logo
+        ? {
+            base64: logo.pngBase64,
+            mediaType: "image/png",
+            sourceUrl: logo.sourceUrl,
+            width: logo.width,
+            height: logo.height,
+            detectedFormat: logo.detectedFormat,
+          }
+        : undefined,
     };
     const capturedAt = new Date().toISOString();
     await persistSet<CachedBrand>("brand", url, {
@@ -345,6 +383,7 @@ function allDoneStages(): StageMap {
   return {
     screenshot: s,
     htmlData: s,
+    logo: s,
     copy: s,
     identity: s,
     visuals: s,

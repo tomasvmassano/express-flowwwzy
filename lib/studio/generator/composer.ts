@@ -9,6 +9,7 @@
 import type { Project } from "../project/types";
 import type { ProjectPlan, PlanSection } from "../project/types";
 import type { ComponentManifest } from "../types";
+import { sanitizeSectionContent } from "./sanitize";
 
 /** Generate app/layout.tsx — wraps everything in <LibraryRoot> with the chosen theme. */
 export function composeLayout(project: Project, plan: ProjectPlan): string {
@@ -63,9 +64,13 @@ export function composePage(plan: ProjectPlan, manifests: ComponentManifest[]): 
     const contentVar = `block${i}_${camelize(manifest.id)}`;
     const importPath = "@/" + manifest.filePath.replace(/\.tsx$/, "");
 
+    const safeContent = sanitizeSectionContent(
+      section.manifestId,
+      (section.content as Record<string, unknown>) || {}
+    );
     imports.push(`import ${componentName} from ${JSON.stringify(importPath)};`);
     contentDecls.push(
-      `const ${contentVar} = ${JSON.stringify(section.content, null, 2)};`
+      `const ${contentVar} = ${JSON.stringify(safeContent, null, 2)};`
     );
     elements.push(`      <${componentName} {...${contentVar}} />`);
   });

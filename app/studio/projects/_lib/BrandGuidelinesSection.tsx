@@ -9,6 +9,7 @@ import { computeQualityScore } from "@/lib/studio/brand/qualityScore";
 const STAGE_LABELS: Record<keyof StageMap, string> = {
   screenshot: "Screenshot",
   htmlData: "HTML + CSS",
+  logo: "Logo PNG",
   copy: "Voice + Copy",
   identity: "Identity",
   visuals: "Logo + Colors",
@@ -18,6 +19,7 @@ const STAGE_LABELS: Record<keyof StageMap, string> = {
 const STAGE_ORDER: (keyof StageMap)[] = [
   "screenshot",
   "htmlData",
+  "logo",
   "copy",
   "identity",
   "visuals",
@@ -276,6 +278,45 @@ function BrandGuidelinesView({ guidelines: g }: { guidelines: BrandGuidelines })
 
       {/* Logo */}
       <Block title="Logo">
+        {eg.logoPng && (
+          <Row
+            label="PNG"
+            value={
+              <div className="space-y-2">
+                <div
+                  className="inline-block p-3 rounded border border-[#2A2A2A] bg-white"
+                  style={{ maxWidth: 240 }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`data:image/png;base64,${eg.logoPng.base64}`}
+                    alt={`${eg.brand.name} logo`}
+                    className="block max-w-full h-auto"
+                    style={{ maxHeight: 80 }}
+                  />
+                </div>
+                <div className="flex items-center gap-3 text-[10px] font-mono">
+                  <span className="text-[#666]">{eg.logoPng.width}×{eg.logoPng.height}</span>
+                  <span className="text-[#666]">·</span>
+                  <span className="text-[#666]">from {eg.logoPng.detectedFormat}</span>
+                  <span className="text-[#666]">·</span>
+                  <a
+                    href={`data:image/png;base64,${eg.logoPng.base64}`}
+                    download={`${(eg.brand.name || "logo").toLowerCase().replace(/\s+/g, "-")}.png`}
+                    className="underline text-[#CCC] hover:text-[#FAFAFA]"
+                  >
+                    Download PNG
+                  </a>
+                </div>
+                {eg.logoPng.sourceUrl !== "inline" && (
+                  <div className="text-[10px] text-[#555] truncate">
+                    Source: <span className="font-mono">{eg.logoPng.sourceUrl}</span>
+                  </div>
+                )}
+              </div>
+            }
+          />
+        )}
         <Row label="Style" value={<code className="font-mono">{eg.logo.style}</code>} />
         {eg.logo.distinctiveFeatures && (
           <Row label="Distinctive" value={<p className="text-[#CCC] leading-relaxed">{eg.logo.distinctiveFeatures}</p>} />
