@@ -166,6 +166,7 @@ export default function ProjectDetailPage() {
               </div>
 
               <GenerateBox project={project} onChange={load} />
+              <IntakeLinkBox project={project} />
 
               <div className="border border-red-950 rounded-lg bg-red-950/20 p-4">
                 <h3 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-red-300 mb-3">
@@ -574,6 +575,83 @@ function ReferencesSection({
         </button>
       </div>
     </Section>
+  );
+}
+
+function IntakeLinkBox({ project }: { project: Project }) {
+  const [generating, setGenerating] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const intakeFilled = !!project.intake && (
+    (project.intake.services?.length || 0) > 0 ||
+    (project.intake.testimonials?.length || 0) > 0 ||
+    (project.intake.faq?.length || 0) > 0 ||
+    (project.intake.gallery?.length || 0) > 0 ||
+    (project.intake.pricing?.length || 0) > 0 ||
+    !!project.intake.positioning
+  );
+
+  async function generate() {
+    setGenerating(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/studio/projects/${project.id}/intake-link`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.message || data.error || `error ${res.status}`);
+      } else {
+        setLink(data.url);
+      }
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function copy() {
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  }
+
+  return (
+    <div className="border border-[#2A2A2A] rounded-lg bg-[#0F0F0F] p-4">
+      <h3 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#888] mb-3">
+        Intake link {intakeFilled && <span className="text-emerald-400 ml-1">·  ✓ has content</span>}
+      </h3>
+      <p className="text-[11px] text-[#666] mb-3 leading-relaxed">
+        Magic link para o cliente preencher conteúdo (testemunhos, serviços, FAQ, fotos). 30 dias válido.
+      </p>
+      <button
+        onClick={generate}
+        disabled={generating}
+        className="w-full px-3 py-2 rounded bg-[#1A1A1A] border border-[#2A2A2A] text-[#EDEDED] text-xs disabled:opacity-30 hover:border-[#666] transition-colors"
+      >
+        {generating ? "..." : "Generate link"}
+      </button>
+      {error && (
+        <div className="mt-3 p-2 rounded bg-red-950/40 text-red-300 text-[11px] break-words">{error}</div>
+      )}
+      {link && (
+        <div className="mt-3 space-y-2">
+          <code className="block text-[10px] text-[#888] bg-[#0A0A0A] border border-[#1F1F1F] rounded p-2 break-all font-mono">
+            {link}
+          </code>
+          <button
+            onClick={copy}
+            className="w-full px-3 py-1.5 rounded bg-[#FAFAFA] text-black text-[11px] font-semibold hover:bg-[#E0E0E0]"
+          >
+            {copied ? "✓ Copied" : "Copy link"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 

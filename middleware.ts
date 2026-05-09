@@ -15,6 +15,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { STUDIO_COOKIE, verifySessionToken } from "@/lib/studio/auth";
 
 export const config = {
+  // /api/intake/* is public (token-validated inside the route);
+  // /intake/* page is also public (the token IS the auth).
   matcher: ["/studio/:path*", "/api/studio/:path*"],
 };
 

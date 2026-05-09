@@ -21,6 +21,7 @@ import { z } from "zod";
 import { Tier } from "@/lib/types";
 import { ReferenceDNASchema } from "@/lib/studio/types";
 import { ExtractedBrandGuidelinesSchema } from "@/lib/studio/brand/types";
+import { IntakeContentSchema } from "@/lib/studio/intake/types";
 import {
   COMPONENT_CATEGORIES,
   PALETTE_IDS,
@@ -247,6 +248,9 @@ export const ProjectSchema = z.object({
 
   // Auto-collected
   references: z.array(ProjectReferenceSchema),
+
+  // Post-payment intake content (collected via /intake/[token])
+  intake: IntakeContentSchema.optional(),
 
   // Plan
   plan: ProjectPlanSchema.optional(),
