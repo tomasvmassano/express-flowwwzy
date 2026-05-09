@@ -1,66 +1,106 @@
 /**
- * Reference URL → ReferenceDNA orchestrator.
+ * Reference URL → ReferenceDNA orchestrator (async kick-off + poll).
  *
- * Pipeline:
- *   url → cache hit? return.
- *   url → screenshot (Apify) → analyze (Claude vision) → assemble → cache → return.
+ * Two-phase flow:
+ *   kickOffExtraction(url)   →  fast: starts Apify, returns jobId.
+ *   pollExtraction(jobId,url)→  cheap when Apify is still running.
+ *                                When SUCCEEDED, runs HTML enrichment +
+ *                                Claude vision and returns full DNA.
  *
- * The orchestrator is the only file the API route imports. Screenshot and
- * analyze stay isolated so they can be tested independently.
+ * The Vercel route does:
+ *   POST → kickOffExtraction → returns { status: "running", jobId }
+ *   GET  → pollExtraction    → returns { status: "running"|"done"|"failed", ... }
+ *
+ * Each individual call fits comfortably under the 60s hobby ceiling.
  */
 
 import { ReferenceDNA } from "../types";
-import { takeScreenshot } from "./screenshot";
+import { kickOffScreenshot, pollScreenshot } from "./screenshot";
 import { analyzeScreenshot } from "./analyze";
 import { enrichFromHtml, EnrichmentHints } from "./html-enrich";
 import { getCached, setCached } from "./cache";
 
-export type ExtractResult = {
-  dna: ReferenceDNA;
-  fromCache: boolean;
-  hints: EnrichmentHints;
-  timings: { totalMs: number; screenshotMs?: number; htmlMs?: number; analyzeMs?: number };
-};
+export type KickOffResult =
+  | { status: "running"; jobId: string }
+  | { status: "done"; dna: ReferenceDNA; fromCache: true };
 
-export async function extractReferenceDNA(url: string): Promise<ExtractResult> {
+export type PollResult =
+  | { status: "running"; elapsedMs: number }
+  | {
+      status: "done";
+      dna: ReferenceDNA;
+      hints: EnrichmentHints;
+      fromCache: boolean;
+      timings: { totalMs: number; htmlMs?: number; analyzeMs?: number; runDurationMs?: number };
+    }
+  | { status: "failed"; error: string };
+
+/**
+ * Phase 1 — start the screenshot. Returns a jobId the caller will poll
+ * with `pollExtraction(jobId, url)`. If the URL is already cached from
+ * a previous extraction, returns the DNA directly without hitting Apify.
+ */
+export async function kickOffExtraction(url: string): Promise<KickOffResult> {
+  const cached = getCached(url);
+  if (cached) {
+    return { status: "done", dna: cached, fromCache: true };
+  }
+  const { runId } = await kickOffScreenshot(url);
+  return { status: "running", jobId: runId };
+}
+
+/**
+ * Phase 2 — poll. The caller passes back the jobId and the original URL
+ * (we don't store URL → jobId mapping; client is the source of truth).
+ *
+ * If Apify is still running, returns `{ status: "running", elapsedMs }`.
+ * If SUCCEEDED, runs HTML enrichment + Claude vision (parallel where
+ * possible) and returns the assembled ReferenceDNA.
+ */
+export async function pollExtraction(jobId: string, url: string): Promise<PollResult> {
   const t0 = Date.now();
 
+  // Cache check — if a previous successful poll cached this URL's DNA,
+  // skip everything.
   const cached = getCached(url);
   if (cached) {
     return {
+      status: "done",
       dna: cached,
-      fromCache: true,
       hints: { declaredFonts: [] },
+      fromCache: true,
       timings: { totalMs: Date.now() - t0 },
     };
   }
 
-  // Screenshot (Apify) and HTML enrichment run in parallel — the HTML
-  // fetch is fast (~500-2000ms) and finishes long before the screenshot.
-  const tShot = Date.now();
+  const shotResult = await pollScreenshot(jobId);
+  if (shotResult.status === "running") {
+    return { status: "running", elapsedMs: shotResult.elapsedMs };
+  }
+  if (shotResult.status === "failed") {
+    return { status: "failed", error: shotResult.error };
+  }
+
+  // SUCCEEDED — finish the pipeline.
+  const screenshot = shotResult.screenshot;
+
   const tHtml = Date.now();
-  const [shot, hints] = await Promise.all([
-    takeScreenshot(url),
-    enrichFromHtml(url),
-  ]);
-  const screenshotMs = Date.now() - tShot;
+  const hints = await enrichFromHtml(url);
   const htmlMs = Date.now() - tHtml;
 
   const tAnalyze = Date.now();
   const { dna: extracted, rawJson } = await analyzeScreenshot(
-    shot.buffer.toString("base64"),
+    screenshot.buffer.toString("base64"),
     url,
-    shot.contentType,
+    screenshot.contentType,
     hints
   );
   const analyzeMs = Date.now() - tAnalyze;
 
-  // Assemble the final ReferenceDNA. closestId stays null until the matcher
-  // computes Lab-distance against the named palette catalog.
   const reference: ReferenceDNA = {
     url,
     capturedAt: new Date().toISOString(),
-    screenshotUrl: shot.apifyUrl,
+    screenshotUrl: screenshot.apifyUrl,
     summary: extracted.summary,
     rawAnalysis: rawJson,
     moodTags: extracted.moodTags,
@@ -81,9 +121,15 @@ export async function extractReferenceDNA(url: string): Promise<ExtractResult> {
   setCached(url, reference);
 
   return {
+    status: "done",
     dna: reference,
-    fromCache: false,
     hints,
-    timings: { totalMs: Date.now() - t0, screenshotMs, htmlMs, analyzeMs },
+    fromCache: false,
+    timings: {
+      totalMs: Date.now() - t0,
+      htmlMs,
+      analyzeMs,
+      runDurationMs: shotResult.runDurationMs,
+    },
   };
 }

@@ -1,15 +1,21 @@
 /**
- * Screenshot capture via Apify (apify/screenshot-url actor).
+ * Screenshot capture via Apify, split into kick-off + poll phases.
  *
- * Returns the screenshot as a Buffer + content type. The matcher and
- * analyzer never see Apify-specific shapes; if we swap providers later,
- * only this file changes.
+ * The original single-shot `run-sync` flow blocks the calling Vercel
+ * function until Apify finishes — for premium portfolio sites that
+ * routinely takes 60-240s, well past the hobby tier's 60s ceiling.
  *
- * The actor produces full-page renders that often exceed Claude vision's
- * 5MB limit (e.g. studio-mcgee.com came back at 7950×8827, 5.4MB). We
- * resize down to a max edge of 1600px and convert to JPEG before
- * returning, which gives Claude all the visual detail it needs while
- * staying comfortably under the API limit.
+ * Async flow:
+ *   1. kickOffScreenshot(url) → starts an Apify run, returns runId.
+ *      Fast (~1-3s, just the API call).
+ *   2. pollScreenshot(runId) → checks Apify status. If still running,
+ *      returns immediately. If SUCCEEDED, fetches the screenshot from
+ *      Apify's KV store and resizes via sharp, returns the buffer.
+ *      Failure cases return a typed error.
+ *
+ * Each individual call fits comfortably in 60s. The orchestration
+ * (when to poll, how often) lives outside this module — typically
+ * the client polls the API route every few seconds.
  */
 
 import sharp from "sharp";
@@ -22,31 +28,27 @@ const JPEG_QUALITY = 82;
 
 export type Screenshot = {
   buffer: Buffer;
-  /** After resize the output is JPEG (smaller, still high quality for vision) */
   contentType: "image/jpeg";
-  /** Where the screenshot lives in Apify's KV store — kept for cache/debug */
   apifyUrl: string;
-  /** Final dimensions after resize, for logging/audit */
   dimensions: { width: number; height: number };
-  /** Final byte size after resize */
   byteSize: number;
 };
 
-export async function takeScreenshot(url: string): Promise<Screenshot> {
-  const token = process.env.APIFY_API_TOKEN;
-  if (!token) {
-    throw new Error("APIFY_API_TOKEN is not set in env vars");
-  }
+export type PollResult =
+  | { status: "running"; elapsedMs: number }
+  | { status: "succeeded"; screenshot: Screenshot; runDurationMs: number }
+  | { status: "failed"; error: string; apifyStatus?: string };
 
-  // 1) Run the actor synchronously. ~5-15s for typical sites; up to 60s for
-  // premium portfolios with heavy entrance animations.
-  // - waitUntil: networkidle2 → wait until network has been idle for 500ms.
-  //   Necessary for SPA sites whose content loads after `load` fires.
-  // - delay: 3000 → extra grace for CSS animations finishing their entrance.
-  //   Charlie Horner / Dan Fink style sites need this; cheaper sites are fine.
-  // - memory: 2048 → faster headless render. Free tier ceiling per run.
-  const runRes = await fetch(
-    `${APIFY_BASE}/acts/${ACTOR_ID}/run-sync?token=${token}&memory=2048&timeout=90`,
+// ─────────────────────────────────────────────────────────────────────────
+// Phase 1 — kick off
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function kickOffScreenshot(url: string): Promise<{ runId: string }> {
+  const token = process.env.APIFY_API_TOKEN;
+  if (!token) throw new Error("APIFY_API_TOKEN is not set in env vars");
+
+  const res = await fetch(
+    `${APIFY_BASE}/acts/${ACTOR_ID}/runs?token=${token}&memory=2048&timeout=180`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -60,33 +62,75 @@ export async function takeScreenshot(url: string): Promise<Screenshot> {
       }),
     }
   );
-  if (!runRes.ok) {
-    const text = await runRes.text().catch(() => "");
-    throw new Error(`Apify run failed: ${runRes.status} ${text.slice(0, 240)}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Apify kickoff failed: ${res.status} ${text.slice(0, 240)}`);
   }
-  const run = await runRes.json();
-  const storeId: string | undefined = run?.data?.defaultKeyValueStoreId;
-  if (!storeId) throw new Error("Apify run produced no defaultKeyValueStoreId");
+  const json = await res.json();
+  const runId: string | undefined = json?.data?.id;
+  if (!runId) throw new Error("Apify response missing run.id");
+  return { runId };
+}
 
-  // 2) Find the screenshot record in the run's KV store.
+// ─────────────────────────────────────────────────────────────────────────
+// Phase 2 — poll
+// ─────────────────────────────────────────────────────────────────────────
+
+export async function pollScreenshot(runId: string): Promise<PollResult> {
+  const token = process.env.APIFY_API_TOKEN;
+  if (!token) throw new Error("APIFY_API_TOKEN is not set");
+
+  const statusRes = await fetch(`${APIFY_BASE}/actor-runs/${runId}?token=${token}`);
+  if (!statusRes.ok) {
+    return { status: "failed", error: `Status check failed: ${statusRes.status}` };
+  }
+  const { data } = await statusRes.json();
+
+  const startedAtMs = data?.startedAt ? new Date(data.startedAt).getTime() : Date.now();
+  const elapsedMs = Date.now() - startedAtMs;
+  const apifyStatus: string = data?.status || "UNKNOWN";
+
+  if (apifyStatus === "READY" || apifyStatus === "RUNNING") {
+    return { status: "running", elapsedMs };
+  }
+  if (apifyStatus !== "SUCCEEDED") {
+    return {
+      status: "failed",
+      error: `Apify run ended in status ${apifyStatus}`,
+      apifyStatus,
+    };
+  }
+
+  // SUCCEEDED — fetch the screenshot record from the run's KV store.
+  const storeId: string | undefined = data?.defaultKeyValueStoreId;
+  if (!storeId) {
+    return { status: "failed", error: "Apify run had no defaultKeyValueStoreId" };
+  }
+
   const keysRes = await fetch(
     `${APIFY_BASE}/key-value-stores/${storeId}/keys?token=${token}&limit=10`
   );
-  if (!keysRes.ok) throw new Error(`KV keys fetch failed: ${keysRes.status}`);
+  if (!keysRes.ok) {
+    return { status: "failed", error: `KV keys fetch failed: ${keysRes.status}` };
+  }
   const keysData = await keysRes.json();
   const items: { key: string }[] = keysData?.data?.items || [];
   const imgKey = items.find((k) => k.key.endsWith(".png") || /screenshot/i.test(k.key))?.key;
   if (!imgKey) {
-    throw new Error(`No screenshot key in KV store. Found: ${items.map((i) => i.key).join(", ")}`);
+    return {
+      status: "failed",
+      error: `No screenshot key in KV store. Keys: ${items.map((i) => i.key).join(", ")}`,
+    };
   }
 
-  // 3) Pull the bytes.
   const imgUrl = `${APIFY_BASE}/key-value-stores/${storeId}/records/${imgKey}?token=${token}`;
   const imgRes = await fetch(imgUrl);
-  if (!imgRes.ok) throw new Error(`Screenshot fetch failed: ${imgRes.status}`);
+  if (!imgRes.ok) {
+    return { status: "failed", error: `Screenshot fetch failed: ${imgRes.status}` };
+  }
   const rawBuffer = Buffer.from(await imgRes.arrayBuffer());
 
-  // 4) Resize + recompress so vision API never gets oversized inputs.
+  // Resize + recompress so vision API never gets oversized inputs.
   const pipeline = sharp(rawBuffer).resize({
     width: MAX_EDGE_PX,
     height: MAX_EDGE_PX,
@@ -97,10 +141,14 @@ export async function takeScreenshot(url: string): Promise<Screenshot> {
   const meta = await sharp(resized).metadata();
 
   return {
-    buffer: resized,
-    contentType: "image/jpeg",
-    apifyUrl: imgUrl,
-    dimensions: { width: meta.width || 0, height: meta.height || 0 },
-    byteSize: resized.length,
+    status: "succeeded",
+    runDurationMs: data?.stats?.durationMillis ?? elapsedMs,
+    screenshot: {
+      buffer: resized,
+      contentType: "image/jpeg",
+      apifyUrl: imgUrl,
+      dimensions: { width: meta.width || 0, height: meta.height || 0 },
+      byteSize: resized.length,
+    },
   };
 }
