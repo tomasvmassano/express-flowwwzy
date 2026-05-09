@@ -10,6 +10,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { ExtractedDNA, ExtractedDNASchema } from "../types";
+import { EnrichmentHints } from "./html-enrich";
 
 const MODEL = "claude-sonnet-4-5";
 
@@ -24,7 +25,9 @@ Princípios:
 
 Processo mental:
 1. Tipografia primeiro: que classificação? Que par? Que feel? Que nível de expressividade (1-5)?
+   IMPORTANTE: se te forem fornecidos nomes autoritativos de fontes (HTML hints), usa-os para classificar com mais precisão. Por exemplo: "Fraunces" → serif-display, elegant, expressiveness 4-5.
 2. Paleta: 3-5 cores dominantes em hex. Identifica o background. É dark mode?
+   Se houver theme-color declarado nos HTML hints, usa-o como sinal forte para a paleta primária — mas verifica visualmente se é mesmo dominante na render.
 3. Densidade e alinhamento.
 4. Imagery: estilo, treatment, presença humana.
 5. Mood tags (1-4) que melhor capturam a vibe.
@@ -34,10 +37,33 @@ Processo mental:
 
 Devolve via a ferramenta extract_design_dna. Não respondas em texto livre.`;
 
+function formatEnrichmentBlock(hints?: EnrichmentHints): string {
+  if (!hints) return "";
+  const lines: string[] = [];
+  if (hints.declaredFonts.length > 0) {
+    lines.push(`Fontes declaradas: ${hints.declaredFonts.join(", ")}`);
+  }
+  if (hints.themeColor) {
+    lines.push(`Theme color declarado: ${hints.themeColor}`);
+  }
+  if (hints.pageTitle) {
+    lines.push(`Título: ${hints.pageTitle}`);
+  }
+  if (hints.pageDescription) {
+    lines.push(`Descrição: ${hints.pageDescription}`);
+  }
+  if (hints.language) {
+    lines.push(`Idioma: ${hints.language}`);
+  }
+  if (lines.length === 0) return "";
+  return `\n\nHTML hints (use como pistas, não substituem a análise visual):\n${lines.map((l) => `- ${l}`).join("\n")}`;
+}
+
 export async function analyzeScreenshot(
   imageBase64: string,
   url: string,
-  mediaType: "image/png" | "image/jpeg" = "image/jpeg"
+  mediaType: "image/png" | "image/jpeg" = "image/jpeg",
+  hints?: EnrichmentHints
 ): Promise<{ dna: ExtractedDNA; rawJson: string }> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
@@ -74,7 +100,7 @@ export async function analyzeScreenshot(
           },
           {
             type: "text",
-            text: `Screenshot fonte: ${url}\n\nExtrai o design DNA usando a ferramenta.`,
+            text: `Screenshot fonte: ${url}${formatEnrichmentBlock(hints)}\n\nExtrai o design DNA usando a ferramenta.`,
           },
         ],
       },

@@ -38,9 +38,15 @@ export async function takeScreenshot(url: string): Promise<Screenshot> {
     throw new Error("APIFY_API_TOKEN is not set in env vars");
   }
 
-  // 1) Run the actor synchronously. ~3-8s for a single URL.
+  // 1) Run the actor synchronously. ~5-15s for typical sites; up to 60s for
+  // premium portfolios with heavy entrance animations.
+  // - waitUntil: networkidle2 → wait until network has been idle for 500ms.
+  //   Necessary for SPA sites whose content loads after `load` fires.
+  // - delay: 3000 → extra grace for CSS animations finishing their entrance.
+  //   Charlie Horner / Dan Fink style sites need this; cheaper sites are fine.
+  // - memory: 2048 → faster headless render. Free tier ceiling per run.
   const runRes = await fetch(
-    `${APIFY_BASE}/acts/${ACTOR_ID}/run-sync?token=${token}&memory=1024&timeout=90`,
+    `${APIFY_BASE}/acts/${ACTOR_ID}/run-sync?token=${token}&memory=2048&timeout=90`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -48,7 +54,7 @@ export async function takeScreenshot(url: string): Promise<Screenshot> {
         urls: [{ url }],
         format: "png",
         waitUntil: "networkidle2",
-        delay: 1500,
+        delay: 3000,
         viewportWidth: 1440,
         scrollToBottom: false,
       }),

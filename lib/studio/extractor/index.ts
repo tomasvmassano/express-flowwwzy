@@ -12,12 +12,14 @@
 import { ReferenceDNA } from "../types";
 import { takeScreenshot } from "./screenshot";
 import { analyzeScreenshot } from "./analyze";
+import { enrichFromHtml, EnrichmentHints } from "./html-enrich";
 import { getCached, setCached } from "./cache";
 
 export type ExtractResult = {
   dna: ReferenceDNA;
   fromCache: boolean;
-  timings: { totalMs: number; screenshotMs?: number; analyzeMs?: number };
+  hints: EnrichmentHints;
+  timings: { totalMs: number; screenshotMs?: number; htmlMs?: number; analyzeMs?: number };
 };
 
 export async function extractReferenceDNA(url: string): Promise<ExtractResult> {
@@ -25,18 +27,31 @@ export async function extractReferenceDNA(url: string): Promise<ExtractResult> {
 
   const cached = getCached(url);
   if (cached) {
-    return { dna: cached, fromCache: true, timings: { totalMs: Date.now() - t0 } };
+    return {
+      dna: cached,
+      fromCache: true,
+      hints: { declaredFonts: [] },
+      timings: { totalMs: Date.now() - t0 },
+    };
   }
 
+  // Screenshot (Apify) and HTML enrichment run in parallel — the HTML
+  // fetch is fast (~500-2000ms) and finishes long before the screenshot.
   const tShot = Date.now();
-  const shot = await takeScreenshot(url);
+  const tHtml = Date.now();
+  const [shot, hints] = await Promise.all([
+    takeScreenshot(url),
+    enrichFromHtml(url),
+  ]);
   const screenshotMs = Date.now() - tShot;
+  const htmlMs = Date.now() - tHtml;
 
   const tAnalyze = Date.now();
   const { dna: extracted, rawJson } = await analyzeScreenshot(
     shot.buffer.toString("base64"),
     url,
-    shot.contentType
+    shot.contentType,
+    hints
   );
   const analyzeMs = Date.now() - tAnalyze;
 
@@ -68,6 +83,7 @@ export async function extractReferenceDNA(url: string): Promise<ExtractResult> {
   return {
     dna: reference,
     fromCache: false,
-    timings: { totalMs: Date.now() - t0, screenshotMs, analyzeMs },
+    hints,
+    timings: { totalMs: Date.now() - t0, screenshotMs, htmlMs, analyzeMs },
   };
 }
