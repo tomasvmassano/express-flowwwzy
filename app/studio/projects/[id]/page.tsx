@@ -129,7 +129,7 @@ export default function ProjectDetailPage() {
               <FormSection project={project} onPatch={patch} saving={saving} />
               <BrandGuidelinesSection project={project} onPatch={patch} />
               <ReferencesSection project={project} onPatch={patch} onReload={load} />
-              <PlanSection project={project} />
+              <PlanSection project={project} onReload={load} />
             </div>
 
             {/* Right rail — actions */}
@@ -637,32 +637,100 @@ function GenerateBox({ project, onChange }: { project: Project; onChange: () => 
   );
 }
 
-function PlanSection({ project }: { project: Project }) {
-  if (!project.plan) {
-    return (
-      <Section title="Plan">
-        <div className="text-xs text-[#666] py-2">
-          No plan yet. The AI proposer (V3) will populate this once references are extracted and form is complete.
-          For V1, you can manually compose the plan via the matcher in Sandbox.
-        </div>
-      </Section>
-    );
+function PlanSection({ project, onReload }: { project: Project; onReload: () => void }) {
+  const [proposing, setProposing] = useState(false);
+  const [proposalResult, setProposalResult] = useState<{ reasons?: string[]; warnings?: string[]; error?: string } | null>(null);
+
+  async function proposeWithAI() {
+    setProposing(true);
+    setProposalResult(null);
+    try {
+      const res = await fetch(`/api/studio/projects/${project.id}/propose`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setProposalResult({ error: data.message || data.error || `error ${res.status}` });
+      } else {
+        setProposalResult({ reasons: data.reasons, warnings: data.warnings });
+      }
+    } catch (e) {
+      setProposalResult({ error: String(e) });
+    } finally {
+      setProposing(false);
+      onReload();
+    }
   }
+
   return (
-    <Section title="Plan">
-      <div className="text-xs text-[#CCC] space-y-2">
-        <div className="flex gap-3 flex-wrap">
-          <span className="text-[#888]">paletteId:</span> <code className="font-mono">{project.plan.paletteId}</code>
-          <span className="text-[#888]">fontPair:</span> <code className="font-mono">{project.plan.fontPair}</code>
+    <Section
+      title="Plan"
+      action={
+        <button
+          onClick={proposeWithAI}
+          disabled={proposing}
+          className="px-2.5 py-1 rounded bg-[#FAFAFA] text-black text-[11px] font-semibold disabled:opacity-30"
+        >
+          {proposing ? "..." : project.plan ? "Re-propose" : "Propose with AI"}
+        </button>
+      }
+    >
+      {proposalResult?.error && (
+        <div className="mb-3 p-2 rounded bg-red-950/40 text-red-300 text-[11px] break-words">{proposalResult.error}</div>
+      )}
+      {proposalResult?.warnings && proposalResult.warnings.length > 0 && (
+        <div className="mb-3 p-2 rounded bg-amber-950/40 text-amber-300 text-[11px]">
+          <p className="font-semibold mb-1">Warnings</p>
+          <ul className="space-y-0.5">
+            {proposalResult.warnings.map((w, i) => <li key={i}>· {w}</li>)}
+          </ul>
         </div>
-        <ul className="space-y-1 mt-2">
-          {project.plan.sections.map((s, i) => (
-            <li key={i} className="font-mono text-[11px]">
-              <span className="text-[#666]">{s.category}</span> → <span className="text-[#EDEDED]">{s.manifestId}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      )}
+      {proposalResult?.reasons && proposalResult.reasons.length > 0 && (
+        <details className="mb-3 text-[11px]">
+          <summary className="cursor-pointer text-[#888] hover:text-[#CCC]">
+            Decisions ({proposalResult.reasons.length})
+          </summary>
+          <ul className="mt-2 space-y-0.5 text-[#CCC] font-mono">
+            {proposalResult.reasons.map((r, i) => <li key={i}>· {r}</li>)}
+          </ul>
+        </details>
+      )}
+
+      {!project.plan ? (
+        <div className="text-xs text-[#666] py-2">
+          No plan yet. Click <strong>Propose with AI</strong> — the proposer applies the canon, picks blocks via the matcher, and synthesizes content from form + brand + references.
+        </div>
+      ) : (
+        <div className="text-xs text-[#CCC] space-y-3">
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            <span><span className="text-[#888]">palette:</span> <code className="font-mono">{project.plan.paletteId}</code> {project.plan.paletteSource && <span className="text-[#666] text-[10px]">({project.plan.paletteSource})</span>}</span>
+            <span><span className="text-[#888]">fontPair:</span> <code className="font-mono">{project.plan.fontPair}</code> {project.plan.fontSource && <span className="text-[#666] text-[10px]">({project.plan.fontSource})</span>}</span>
+            <span><span className="text-[#888]">strategy:</span> <code className="font-mono">{project.plan.themeStrategy || "—"}</code></span>
+          </div>
+          <ul className="space-y-2 mt-2">
+            {project.plan.sections.map((s, i) => (
+              <li key={i} className="border-l border-[#2A2A2A] pl-3 py-1">
+                <div className="flex items-baseline gap-3 font-mono text-[11px] flex-wrap">
+                  <span className="text-[#666]">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="text-[#888]">{s.category}</span>
+                  <span className="text-[#EDEDED]">→ {s.manifestId}</span>
+                  {s.confidence !== undefined && (
+                    <span className={`text-[10px] tabular-nums ${s.confidence < 0.7 ? "text-amber-400" : "text-emerald-400"}`}>
+                      conf {s.confidence.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                {s.positionRationale && (
+                  <p className="text-[10px] text-[#666] mt-1 ml-9 leading-relaxed">{s.positionRationale}</p>
+                )}
+                <details className="mt-1 ml-9 text-[10px] text-[#888]">
+                  <summary className="cursor-pointer hover:text-[#CCC]">{Object.keys(s.content).length} slots filled</summary>
+                  <pre className="mt-1.5 p-2 rounded bg-[#0A0A0A] border border-[#1F1F1F] overflow-x-auto whitespace-pre-wrap break-words">{JSON.stringify(s.content, null, 2)}</pre>
+                </details>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </Section>
   );
 }

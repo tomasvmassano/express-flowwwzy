@@ -3,6 +3,7 @@ import { getProject, updateProject } from "@/lib/studio/project/storage";
 import { canTransition } from "@/lib/studio/project/types";
 import { generateProject, projectSlug, summarizeFiles, GenerateError } from "@/lib/studio/generator";
 import { deployToVercel, DeployError } from "@/lib/studio/generator/deploy";
+import { sendSiteLiveEmail } from "@/lib/studio/email/send";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -69,19 +70,47 @@ export async function POST(_req: NextRequest, { params }: Ctx) {
   // Deploy
   try {
     const result = await deployToVercel({ slug, files });
+    const deployedUrl = `https://${result.url}`;
     await updateProject(id, {
       state: "deployed",
-      deployedUrl: `https://${result.url}`,
+      deployedUrl,
       vercelProjectId: result.projectId,
       libraryVersion: process.env.VERCEL_GIT_COMMIT_SHA || "local",
     });
+
+    // Fire-and-forget email — don't fail the whole request if email errors,
+    // just log the failure. Operator can resend manually from /studio later.
+    let emailSent = false;
+    let emailError: string | null = null;
+    if (project.form.customer.email && process.env.RESEND_API_KEY) {
+      try {
+        await sendSiteLiveEmail({
+          to: project.form.customer.email,
+          customerName: project.form.customer.name,
+          businessName: project.form.business.name || slug,
+          deployedUrl,
+          inspectorUrl: result.inspectorUrl,
+        });
+        emailSent = true;
+        await updateProject(id, {
+          state: "delivered",
+          emailSentAt: new Date().toISOString(),
+        });
+      } catch (emailErr) {
+        emailError = emailErr instanceof Error ? emailErr.message : String(emailErr);
+        console.error("[generate] email send failed", emailError);
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       slug,
       deploymentId: result.deploymentId,
-      deployedUrl: `https://${result.url}`,
+      deployedUrl,
       inspectorUrl: result.inspectorUrl,
       filesSummary: summary,
+      emailSent,
+      emailError,
     });
   } catch (err) {
     const message = err instanceof DeployError ? err.message : String(err);
