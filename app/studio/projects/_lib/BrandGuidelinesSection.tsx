@@ -9,6 +9,7 @@ import { computeQualityScore } from "@/lib/studio/brand/qualityScore";
 const STAGE_LABELS: Record<keyof StageMap, string> = {
   screenshot: "Screenshot",
   htmlData: "HTML + CSS",
+  copy: "Voice + Copy",
   identity: "Identity",
   visuals: "Logo + Colors",
   technical: "Typography + Layout",
@@ -17,6 +18,7 @@ const STAGE_LABELS: Record<keyof StageMap, string> = {
 const STAGE_ORDER: (keyof StageMap)[] = [
   "screenshot",
   "htmlData",
+  "copy",
   "identity",
   "visuals",
   "technical",
@@ -151,7 +153,7 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
         {!existing && (
           <>
             <p className="text-xs text-[#888] mb-3 leading-relaxed">
-              Cola o URL de um site (atual do cliente, ou referência que represente a marca). Extraímos um manual completo de brand guidelines: identidade, tipografia, paleta, layout, princípios. O AI plan proposer (V3) usa isto como input principal.
+              Cola o URL do <strong className="text-[#EDEDED]">site atual do cliente</strong>. Extraímos brand guidelines completos (identidade, tipografia, paleta, princípios) <strong className="text-[#EDEDED]">+ voice profile + copy</strong> repurposable. Se o cliente não tiver site, usa um asset que represente a marca.
             </p>
             <div className="flex gap-2">
               <input
@@ -421,6 +423,122 @@ function BrandGuidelinesView({ guidelines: g }: { guidelines: BrandGuidelines })
                 <ul className="space-y-0.5">
                   {eg.motion.signatureInteractions.map((s, i) => (
                     <li key={i} className="text-[#CCC]">· {s}</li>
+                  ))}
+                </ul>
+              }
+            />
+          )}
+        </Block>
+      )}
+
+      {/* Voice */}
+      {eg.voice && (
+        <Block title="Voice">
+          <Row label="Idioma" value={<code className="font-mono">{eg.voice.languageCode} · {eg.voice.formality}</code>} />
+          <Row label="Tom" value={<p className="text-[#CCC] leading-relaxed">{eg.voice.tone}</p>} />
+          {eg.voice.sentenceRhythm && (
+            <Row label="Ritmo" value={<p className="text-[#CCC] leading-relaxed">{eg.voice.sentenceRhythm}</p>} />
+          )}
+          {eg.voice.vocabulary.length > 0 && (
+            <Row
+              label="Vocabulário"
+              value={
+                <div className="flex flex-wrap gap-1">
+                  {eg.voice.vocabulary.map((w, i) => (
+                    <span key={i} className="px-1.5 py-0.5 rounded bg-[#1A1A1A] text-[10px] text-[#CCC] font-mono">{w}</span>
+                  ))}
+                </div>
+              }
+            />
+          )}
+          {eg.voice.avoidWords.length > 0 && (
+            <Row
+              label="Evita"
+              value={
+                <div className="flex flex-wrap gap-1">
+                  {eg.voice.avoidWords.map((w, i) => (
+                    <span key={i} className="px-1.5 py-0.5 rounded bg-red-950/40 text-[10px] text-red-300 font-mono line-through">{w}</span>
+                  ))}
+                </div>
+              }
+            />
+          )}
+          {eg.voice.examples.length > 0 && (
+            <Row
+              label="Exemplos"
+              value={
+                <ul className="space-y-1">
+                  {eg.voice.examples.map((ex, i) => (
+                    <li key={i} className="text-[#CCC] italic leading-relaxed">"{ex}"</li>
+                  ))}
+                </ul>
+              }
+            />
+          )}
+        </Block>
+      )}
+
+      {/* Copy */}
+      {eg.copy && (
+        <Block title="Copy do site atual">
+          {eg.copy.heroHeadline && (
+            <Row label="Hero" value={<p className="text-[#EDEDED] font-medium leading-relaxed">{eg.copy.heroHeadline}</p>} />
+          )}
+          {eg.copy.heroSubheadline && (
+            <Row label="Hero sub" value={<p className="text-[#CCC] leading-relaxed">{eg.copy.heroSubheadline}</p>} />
+          )}
+          {eg.copy.aboutSnippet && (
+            <Row label="About" value={<p className="text-[#CCC] leading-relaxed">{eg.copy.aboutSnippet}</p>} />
+          )}
+          {eg.copy.valueProps.length > 0 && (
+            <Row
+              label="Value props"
+              value={
+                <ul className="space-y-1.5">
+                  {eg.copy.valueProps.map((v, i) => (
+                    <li key={i}>
+                      <div className="text-[#EDEDED] font-medium">{v.title}</div>
+                      <div className="text-[#888] text-[11px] leading-relaxed">{v.description}</div>
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
+          )}
+          {eg.copy.serviceBlurbs.length > 0 && (
+            <Row
+              label="Serviços"
+              value={
+                <ul className="space-y-1.5">
+                  {eg.copy.serviceBlurbs.map((s, i) => (
+                    <li key={i}>
+                      <div className="text-[#EDEDED] font-medium">{s.name}</div>
+                      <div className="text-[#888] text-[11px] leading-relaxed">{s.description}</div>
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
+          )}
+          {eg.copy.ctaPhrases.length > 0 && (
+            <Row
+              label="CTAs"
+              value={
+                <div className="flex flex-wrap gap-1.5">
+                  {eg.copy.ctaPhrases.map((c, i) => (
+                    <span key={i} className="px-2 py-0.5 rounded bg-[#1A1A1A] text-[11px] text-[#EDEDED]">{c}</span>
+                  ))}
+                </div>
+              }
+            />
+          )}
+          {eg.copy.socialProof.length > 0 && (
+            <Row
+              label="Social proof"
+              value={
+                <ul className="space-y-0.5">
+                  {eg.copy.socialProof.map((sp, i) => (
+                    <li key={i} className="text-[#CCC]">· {sp}</li>
                   ))}
                 </ul>
               }

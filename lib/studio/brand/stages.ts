@@ -26,6 +26,8 @@ import {
   MotionSystemSchema,
   DesignPrincipleSchema,
   SectionArchetypeSchema,
+  VoiceProfileSchema,
+  CopySnippetsSchema,
 } from "./types";
 
 const MODEL = "claude-sonnet-4-5";
@@ -65,6 +67,12 @@ export const TechnicalFragmentSchema = z.object({
   components: ComponentRulesSchema,
 });
 export type TechnicalFragment = z.infer<typeof TechnicalFragmentSchema>;
+
+export const CopyFragmentSchema = z.object({
+  voice: VoiceProfileSchema,
+  copy: CopySnippetsSchema,
+});
+export type CopyFragment = z.infer<typeof CopyFragmentSchema>;
 
 export const PrinciplesFragmentSchema = z.object({
   designPrinciples: z.array(DesignPrincipleSchema).max(5).default([]),
@@ -111,6 +119,47 @@ function formatContext(url: string, hints?: EnrichmentHints, css?: CssTokens): s
     lines.push(`Breakpoints: ${css.mediaBreakpoints.slice(0, 6).join(", ")}`);
   }
   return lines.join("\n");
+}
+
+async function callClaudeTextOnly<T>(opts: {
+  systemPrompt: string;
+  toolName: string;
+  toolDescription: string;
+  schema: z.ZodType<T>;
+  userText: string;
+}): Promise<T> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not set");
+  const client = new Anthropic({ apiKey });
+
+  const inputSchema = z.toJSONSchema(opts.schema, { target: "draft-7" });
+
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: 4096,
+    system: opts.systemPrompt,
+    tools: [
+      {
+        name: opts.toolName,
+        description: opts.toolDescription,
+        input_schema: inputSchema as Anthropic.Messages.Tool.InputSchema,
+      },
+    ],
+    tool_choice: { type: "tool", name: opts.toolName },
+    messages: [{ role: "user", content: [{ type: "text", text: opts.userText }] }],
+  });
+
+  const toolUse = message.content.find(
+    (c): c is Anthropic.Messages.ToolUseBlock => c.type === "tool_use"
+  );
+  if (!toolUse) {
+    throw new Error(`No tool_use in response. Stop reason: ${message.stop_reason}`);
+  }
+  const parsed = opts.schema.safeParse(toolUse.input);
+  if (!parsed.success) {
+    throw new Error(`Schema validation failed: ${parsed.error.message}`);
+  }
+  return parsed.data;
 }
 
 async function callClaudeWithTool<T>(opts: {
@@ -243,6 +292,90 @@ Devolve via a ferramenta extract_technical.`,
     imageBase64,
     mediaType,
     userText: `Analisa esta screenshot e extrai sistema técnico de design.\n\nCONTEXTO:\n${formatContext(url, hints, css)}`,
+  });
+}
+
+/**
+ * Strip HTML tags + boilerplate, return up to maxChars of visible text
+ * concatenated section-by-section. Cheap heuristic — good enough to feed
+ * a copywriting analysis without bloating the prompt.
+ */
+function htmlToVisibleText(html: string, maxChars = 14000): string {
+  // Remove script/style/noscript blocks completely.
+  let s = html
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ");
+
+  // Preserve block boundaries so headlines don't merge with body copy.
+  s = s.replace(/<\/(p|h[1-6]|li|section|article|header|footer|div|nav)>/gi, "\n");
+  s = s.replace(/<br\s*\/?>(?!\n)/gi, "\n");
+  s = s.replace(/<[^>]+>/g, " ");
+
+  // Decode the most common entities.
+  s = s
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  // Collapse whitespace, trim per-line.
+  s = s
+    .split("\n")
+    .map((l) => l.replace(/\s+/g, " ").trim())
+    .filter((l) => l.length > 0)
+    .join("\n");
+
+  return s.length > maxChars ? s.slice(0, maxChars) : s;
+}
+
+export async function runCopyStage(
+  rawHtml: string,
+  url: string,
+  hints?: EnrichmentHints
+): Promise<CopyFragment> {
+  const visibleText = htmlToVisibleText(rawHtml);
+  const ctx: string[] = [`URL: ${url}`];
+  if (hints?.pageTitle) ctx.push(`Title: ${hints.pageTitle}`);
+  if (hints?.pageDescription) ctx.push(`Description: ${hints.pageDescription}`);
+
+  return await callClaudeTextOnly({
+    systemPrompt: `És um senior copywriter a fazer ENGENHARIA INVERSA da voz e do copy de uma marca a partir do HTML do site dela. O output vai alimentar um gerador de landing pages — quanto mais específico fores, mais a LP final soa à marca.
+${SHARED_RULES}
+
+VOICE PROFILE:
+- languageCode: deteta o idioma da copy ("pt", "en", etc.).
+- formality: como falam ao leitor — "formal" (você/vossa empresa), "casual" (tu/vamos lá), "neutral".
+- tone: 3-5 adjetivos concretos que descrevam o tom. "Irónico, técnico, no-fluff" > "Profissional e moderno".
+- vocabulary: 8-15 palavras/expressões SIGNATURE da marca. Termos do setor, gírias deles, verbos que repetem.
+- avoidWords: palavras corporativas que esta marca claramente REJEITA. Inferes pelo contraste — se eles dizem "ajudamos a fechar mais negócio", evitam "soluções inovadoras".
+- sentenceRhythm: ex. "Frases curtas de 5-12 palavras", "Períodos longos com sub-cláusulas".
+- examples: 3-5 frases LITERAIS do site que melhor capturam a voz (copia-cola, sem alterar).
+
+COPY SNIPPETS:
+- heroHeadline: a headline atual da hero do site (literal).
+- heroSubheadline: o sub-headline atual.
+- valueProps: 3-5 promessas/benefícios CONCRETOS que apareçam no site (não inventes — só extrai). title curto + description 1 frase.
+- serviceBlurbs: serviços oferecidos com nome + descrição 1 frase.
+- ctaPhrases: textos de botões/CTAs que aparecem no site ("Marca uma chamada", "Ver projetos").
+- aboutSnippet: 1-3 frases que melhor explicam o que a empresa faz e para quem.
+- socialProof: nomes de clientes, métricas, prémios, citações de testemunhos. Só o que aparece literalmente.
+
+NÃO inventes nada. Se um campo não tem evidência no HTML, deixa string vazia ou array vazio.
+
+Devolve via a ferramenta extract_copy.`,
+    toolName: "extract_copy",
+    toolDescription: "Voice profile + repurposable copy snippets from the brand's own site.",
+    schema: CopyFragmentSchema,
+    userText: `Analisa o HTML do site abaixo e extrai voice + copy.
+
+CONTEXTO:
+${ctx.join("\n")}
+
+CONTEÚDO VISÍVEL DO SITE (HTML stripped):
+${visibleText}`,
   });
 }
 

@@ -29,10 +29,12 @@ import {
   VisualsFragment,
   TechnicalFragment,
   PrinciplesFragment,
+  CopyFragment,
   runIdentityStage,
   runVisualsStage,
   runTechnicalStage,
   runPrinciplesStage,
+  runCopyStage,
 } from "./stages";
 
 // ─── Cache shapes ─────────────────────────────────────────────────────
@@ -54,6 +56,7 @@ type CachedShot = {
 type CachedHtmlData = {
   hints: EnrichmentHints;
   cssTokens: CssTokens;
+  rawHtml: string;
 };
 
 type StageStatus =
@@ -64,6 +67,7 @@ type StageStatus =
 export type StageMap = {
   screenshot: StageStatus;
   htmlData: StageStatus;
+  copy: StageStatus;
   identity: StageStatus;
   visuals: StageStatus;
   technical: StageStatus;
@@ -144,6 +148,7 @@ export async function pollBrandGuidelines(
   const stages: StageMap = {
     screenshot: { state: "pending" },
     htmlData: { state: "pending" },
+    copy: { state: "pending" },
     identity: { state: "pending" },
     visuals: { state: "pending" },
     technical: { state: "pending" },
@@ -193,14 +198,39 @@ export async function pollBrandGuidelines(
         enrichFromHtml(url),
       ]);
       const cssTokens = await extractCssTokens(url, rawHtml);
-      html = { hints, cssTokens };
+      html = { hints, cssTokens, rawHtml };
       await persistSet("brand-html", url, html);
       stages.htmlData = { state: "done", durationMs: Date.now() - tHtml };
     } catch (e) {
       stages.htmlData = { state: "failed", error: String(e) };
       // Continue — analysis stages can still run with empty hints/css.
-      html = { hints: { declaredFonts: [] }, cssTokens: emptyCssTokens() };
+      html = { hints: { declaredFonts: [] }, cssTokens: emptyCssTokens(), rawHtml: "" };
     }
+  }
+
+  // ─── Stage 1.5: copy (text-only, fast — uses cached rawHtml) ──
+  let copyFrag = await persistGet<{ data: CopyFragment; durationMs: number }>(
+    "brand-stage-copy",
+    url
+  );
+  if (copyFrag) {
+    stages.copy = { state: "done", durationMs: copyFrag.durationMs };
+  } else if (html.rawHtml) {
+    if (Date.now() - t0 > POLL_BUDGET_MS) {
+      return runningResult(stages, t0, shot.runDurationMs);
+    }
+    const tCopy = Date.now();
+    try {
+      const data = await runCopyStage(html.rawHtml, url, html.hints);
+      const durationMs = Date.now() - tCopy;
+      await persistSet("brand-stage-copy", url, { data, durationMs });
+      copyFrag = { data, durationMs };
+      stages.copy = { state: "done", durationMs };
+    } catch (e) {
+      stages.copy = { state: "failed", error: String(e) };
+    }
+  } else {
+    stages.copy = { state: "failed", error: "no rawHtml available" };
   }
 
   // ─── Stage 2-5: vision fragments ──
@@ -275,6 +305,8 @@ export async function pollBrandGuidelines(
       designPrinciples: fragments.principles.designPrinciples,
       sectionArchetypes: fragments.principles.sectionArchetypes,
       webPrinciples: fragments.principles.webPrinciples,
+      voice: copyFrag?.data.voice,
+      copy: copyFrag?.data.copy,
     };
     const capturedAt = new Date().toISOString();
     await persistSet<CachedBrand>("brand", url, {
@@ -313,6 +345,7 @@ function allDoneStages(): StageMap {
   return {
     screenshot: s,
     htmlData: s,
+    copy: s,
     identity: s,
     visuals: s,
     technical: s,

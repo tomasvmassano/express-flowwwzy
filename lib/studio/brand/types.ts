@@ -173,6 +173,37 @@ export const DesignPrincipleSchema = z.object({
   description: z.string(),
 });
 
+export const VoiceProfileSchema = z.object({
+  /** "pt", "en" — language of the source copy */
+  languageCode: z.string().default("pt"),
+  /** "formal" | "casual" | "neutral" */
+  formality: z.enum(["formal", "casual", "neutral"]).default("neutral"),
+  /** Short tone descriptor: "ironic, technical, no-fluff" */
+  tone: z.string(),
+  /** Signature words/phrases the brand uses (8-15) */
+  vocabulary: z.array(z.string()).default([]),
+  /** Words/phrases the brand AVOIDS (corporate clichés they reject) */
+  avoidWords: z.array(z.string()).default([]),
+  /** "Short punchy 5-12 word sentences", "Long flowing periods" */
+  sentenceRhythm: z.string().optional(),
+  /** 3-5 verbatim copy snippets that anchor the voice */
+  examples: z.array(z.string()).default([]),
+});
+
+export const CopySnippetsSchema = z.object({
+  heroHeadline: z.string().optional(),
+  heroSubheadline: z.string().optional(),
+  valueProps: z
+    .array(z.object({ title: z.string(), description: z.string() }))
+    .default([]),
+  serviceBlurbs: z
+    .array(z.object({ name: z.string(), description: z.string() }))
+    .default([]),
+  ctaPhrases: z.array(z.string()).default([]),
+  aboutSnippet: z.string().optional(),
+  socialProof: z.array(z.string()).default([]),
+});
+
 export const SectionArchetypeSchema = z.object({
   type: z.enum([
     "hero",
@@ -240,6 +271,12 @@ export const ExtractedBrandGuidelinesSchema = z.object({
   sectionArchetypes: z.array(SectionArchetypeSchema).default([]),
   webPrinciples: z.array(DesignPrincipleSchema).max(10).default([]),
 
+  /** Voice profile extracted from the brand's own site copy. Optional — may be absent for legacy extractions. */
+  voice: VoiceProfileSchema.optional(),
+
+  /** Concrete copy snippets repurposed from the brand's own site, mapped to LP slot intents. */
+  copy: CopySnippetsSchema.optional(),
+
   /** Free-text summary that captures what the schema can't — vibe, story, audience. 2-4 sentences. */
   summary: z.string(),
 });
@@ -248,3 +285,5 @@ export type ExtractedBrandGuidelines = z.infer<typeof ExtractedBrandGuidelinesSc
 export type ColorEntry = z.infer<typeof ColorEntrySchema>;
 export type TypeFamily = z.infer<typeof TypeFamilySchema>;
 export type DesignPrinciple = z.infer<typeof DesignPrincipleSchema>;
+export type VoiceProfile = z.infer<typeof VoiceProfileSchema>;
+export type CopySnippets = z.infer<typeof CopySnippetsSchema>;

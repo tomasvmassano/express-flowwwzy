@@ -29,7 +29,9 @@ Princípios:
 - Cada slot recebe APENAS o tipo correto. text-short = 1 frase. text-long = 1-2 parágrafos. list = array de items. url = URL válida ou string vazia. image = URL de imagem ou string vazia.
 - Conteúdo concreto, NÃO genérico. "Ajudamos restaurantes em Lisboa a aumentar reservas online em 40%" > "Soluções para o seu negócio". Usa nomes, números, locais, e linguagem específica do negócio do cliente.
 - Português Europeu (você form, não tu). Sem clichés ("revolucionário", "incrível", "moderno"). Sem em dashes.
-- Quando há brand guidelines com voz/personalidade, USA esse tom. Quando há referências aspiracionais, mimica o ritmo/expressividade tipográfica do hero ref.
+- Quando há "Voice profile" no contexto, é AUTORITATIVO — replica formality, tom, ritmo e vocabulário signature. Evita as palavras listadas em "avoidWords".
+- Quando há "Copy do site atual", REPURPOSE inteligentemente: a hero headline da LP pode reformular a deles para encaixar no slot, value props podem ser editadas/condensadas, serviços podem ser referidos pelos nomes deles. Não copies palavra-a-palavra (a LP é nova) mas mantém o posicionamento e a linguagem.
+- Quando há referências aspiracionais, mimica o ritmo/expressividade tipográfica do hero ref — mas sem trair a voz da marca.
 - Se não há informação suficiente para um slot, deixa string vazia OU array vazio. Não inventes números nem testemunhos. Não inventes URLs.
 
 Output via a ferramenta fill_sections — um objeto cujas keys são os sectionIds e values são objetos com {slotKey: slotValue}. Não respondas em texto livre.`;
@@ -58,6 +60,44 @@ function summarizeProjectForPrompt(project: Project): string {
       lines.push(`Design principles:`);
       for (const p of eg.designPrinciples.slice(0, 5)) {
         lines.push(`  - ${p.title}: ${p.description}`);
+      }
+    }
+
+    if (eg.voice) {
+      lines.push(`\n# Voice profile (USA este tom literalmente — não inventes outro)`);
+      lines.push(`Idioma: ${eg.voice.languageCode} · formality: ${eg.voice.formality}`);
+      lines.push(`Tom: ${eg.voice.tone}`);
+      if (eg.voice.sentenceRhythm) lines.push(`Ritmo: ${eg.voice.sentenceRhythm}`);
+      if (eg.voice.vocabulary.length > 0)
+        lines.push(`Vocabulário signature: ${eg.voice.vocabulary.join(", ")}`);
+      if (eg.voice.avoidWords.length > 0)
+        lines.push(`Palavras a EVITAR: ${eg.voice.avoidWords.join(", ")}`);
+      if (eg.voice.examples.length > 0) {
+        lines.push(`Exemplos verbatim da marca (anchor para o tom):`);
+        for (const ex of eg.voice.examples.slice(0, 5)) lines.push(`  · "${ex}"`);
+      }
+    }
+
+    if (eg.copy) {
+      lines.push(`\n# Copy do site atual (REPURPOSE — reescreve para os slots, não copies literalmente exceto onde fizer sentido)`);
+      if (eg.copy.heroHeadline) lines.push(`Hero headline atual: "${eg.copy.heroHeadline}"`);
+      if (eg.copy.heroSubheadline) lines.push(`Hero sub atual: "${eg.copy.heroSubheadline}"`);
+      if (eg.copy.aboutSnippet) lines.push(`About atual: ${eg.copy.aboutSnippet}`);
+      if (eg.copy.valueProps.length > 0) {
+        lines.push(`Value props atuais:`);
+        for (const v of eg.copy.valueProps.slice(0, 5))
+          lines.push(`  · ${v.title} — ${v.description}`);
+      }
+      if (eg.copy.serviceBlurbs.length > 0) {
+        lines.push(`Serviços atuais:`);
+        for (const s of eg.copy.serviceBlurbs.slice(0, 6))
+          lines.push(`  · ${s.name} — ${s.description}`);
+      }
+      if (eg.copy.ctaPhrases.length > 0)
+        lines.push(`CTAs atuais: ${eg.copy.ctaPhrases.join(" | ")}`);
+      if (eg.copy.socialProof.length > 0) {
+        lines.push(`Social proof atual:`);
+        for (const sp of eg.copy.socialProof.slice(0, 5)) lines.push(`  · ${sp}`);
       }
     }
   }
