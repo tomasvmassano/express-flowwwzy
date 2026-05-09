@@ -197,8 +197,14 @@ function FormSection({
 }) {
   const [form, setForm] = useState(project.form);
 
-  // Keep local form in sync when remote project changes
-  useEffect(() => setForm(project.form), [project.form]);
+  // Re-hydrate local form ONLY when we navigate to a different project.
+  // Don't re-sync on every project mutation — references / state-machine
+  // updates also return a fresh project object whose form content is
+  // identical, and the previous [project.form] dep was overwriting any
+  // unsaved local edits whenever those unrelated patches happened.
+  useEffect(() => {
+    setForm(project.form);
+  }, [project.id]);
 
   const dirty = JSON.stringify(form) !== JSON.stringify(project.form);
 
