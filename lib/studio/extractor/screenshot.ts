@@ -47,16 +47,24 @@ export async function kickOffScreenshot(url: string): Promise<{ runId: string }>
   const token = process.env.APIFY_API_TOKEN;
   if (!token) throw new Error("APIFY_API_TOKEN is not set in env vars");
 
+  // waitUntil: "load" (not networkidle2) because modern marketing sites
+  // with persistent analytics/websocket connections never reach 500ms
+  // of network idle — actor would wait forever and time out (saw with
+  // scale-labs.com → TIMED-OUT at 179s).
+  // delay: 5000ms compensates for the looser wait — covers CSS entrance
+  // animations + lazy hero swaps + late font loads.
+  // timeout: 240s is the upper bound; sites that burn this are
+  // pathological or actively bot-blocking.
   const res = await fetch(
-    `${APIFY_BASE}/acts/${ACTOR_ID}/runs?token=${token}&memory=2048&timeout=180`,
+    `${APIFY_BASE}/acts/${ACTOR_ID}/runs?token=${token}&memory=2048&timeout=240`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         urls: [{ url }],
         format: "png",
-        waitUntil: "networkidle2",
-        delay: 3000,
+        waitUntil: "load",
+        delay: 5000,
         viewportWidth: 1440,
         scrollToBottom: false,
       }),
