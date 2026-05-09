@@ -108,7 +108,7 @@ const POLL_BUDGET_MS = 50_000;
 // ─── Public API ──────────────────────────────────────────────────────
 
 export async function kickOffBrandGuidelines(url: string): Promise<BrandKickOffResult> {
-  const cached = await persistGet<CachedBrand>("brand-v2", url);
+  const cached = await persistGet<CachedBrand>("brand-v3", url);
   if (cached) {
     return {
       status: "done",
@@ -135,7 +135,7 @@ export async function pollBrandGuidelines(
   const t0 = Date.now();
 
   // ─── Final result ──
-  const cachedFinal = await persistGet<CachedBrand>("brand-v2", url);
+  const cachedFinal = await persistGet<CachedBrand>("brand-v3", url);
   if (cachedFinal) {
     return {
       status: "done",
@@ -185,8 +185,10 @@ export async function pollBrandGuidelines(
   }
 
   // ─── Stage 1: html data ──
+  // Refetch when an older cache entry lacks rawHtml — the logo + copy
+  // stages depend on it. Without this, they silently skip on legacy caches.
   let html = await persistGet<CachedHtmlData>("brand-html", url);
-  if (html) {
+  if (html && html.rawHtml) {
     stages.htmlData = { state: "done", durationMs: 0 };
   } else {
     if (Date.now() - t0 > POLL_BUDGET_MS) {
@@ -347,7 +349,7 @@ export async function pollBrandGuidelines(
         : undefined,
     };
     const capturedAt = new Date().toISOString();
-    await persistSet<CachedBrand>("brand-v2", url, {
+    await persistSet<CachedBrand>("brand-v3", url, {
       guidelines,
       cssTokens: html.cssTokens,
       hints: html.hints,
