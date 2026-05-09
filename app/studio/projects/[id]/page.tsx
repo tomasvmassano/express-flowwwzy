@@ -711,7 +711,11 @@ function GenerateBox({ project, onChange }: { project: Project; onChange: () => 
   return (
     <div className="border border-[#2A2A2A] rounded-lg bg-[#0F0F0F] p-4">
       <h3 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#888] mb-3">Generate</h3>
-      {!hasPlan && <p className="text-[11px] text-[#666] mb-3">No plan yet — define one before generating.</p>}
+      {!hasPlan && (
+        <p className="text-[11px] text-[#666] mb-3">
+          No plan yet — <a href="#plan-section" className="underline text-[#CCC] hover:text-[#FAFAFA]">propose one in the Plan section</a> below.
+        </p>
+      )}
       {hasPlan && !ready && (
         <p className="text-[11px] text-[#666] mb-3">Project must be in state <code>audited</code> to generate. Current: <code>{project.state}</code>.</p>
       )}
@@ -768,6 +772,7 @@ function PlanSection({ project, onReload }: { project: Project; onReload: () => 
 
   return (
     <Section
+      id="plan-section"
       title="Plan"
       action={
         <button
@@ -843,9 +848,9 @@ function PlanSection({ project, onReload }: { project: Project; onReload: () => 
 
 // ─── Primitives ───────────────────────────────────────────────────────
 
-function Section({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+function Section({ title, action, children, id }: { title: string; action?: React.ReactNode; children: React.ReactNode; id?: string }) {
   return (
-    <section className="border border-[#2A2A2A] rounded-lg bg-[#0F0F0F] overflow-hidden">
+    <section id={id} className="border border-[#2A2A2A] rounded-lg bg-[#0F0F0F] overflow-hidden scroll-mt-20">
       <div className="px-4 py-2.5 border-b border-[#1F1F1F] bg-[#0A0A0A] flex items-center justify-between gap-3">
         <h2 className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#888]">{title}</h2>
         {action}
