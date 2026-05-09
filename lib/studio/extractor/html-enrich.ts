@@ -72,7 +72,23 @@ export async function enrichFromHtml(url: string): Promise<EnrichmentHints> {
     return empty();
   }
 
-  return parseHints(html);
+  const baseHints = parseHints(html);
+
+  // Pass 2 — follow up to 5 external <link rel="stylesheet"> hrefs and
+  // parse @font-face / font-family declarations from the actual CSS files.
+  // This catches self-hosted fonts that don't appear in Google Fonts links
+  // or inline <style> blocks (the common case for premium agency sites).
+  try {
+    const externalFonts = await fetchExternalCssFonts(html, url);
+    if (externalFonts.length > 0) {
+      const merged = new Set([...baseHints.declaredFonts, ...externalFonts]);
+      baseHints.declaredFonts = Array.from(merged).slice(0, 8);
+    }
+  } catch {
+    /* never fail enrichment for an external CSS hiccup */
+  }
+
+  return baseHints;
 }
 
 function empty(): EnrichmentHints {
@@ -191,4 +207,122 @@ function extractAttr(html: string, tag: string, attr: string): string | null {
 
 function escape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// ─── External CSS fetching ─────────────────────────────────────────────
+// Premium agency sites (packbags.nl, kultur5.com, etc.) typically declare
+// fonts via @font-face in linked stylesheets, NOT inline. We fetch the
+// first 5 stylesheets, cap each at 256KB, parse font-family names, and
+// merge into declaredFonts. Capped + timed-out so a slow CSS host
+// never blocks the screenshot pipeline.
+
+const MAX_STYLESHEETS = 5;
+const STYLESHEET_TIMEOUT_MS = 4000;
+const STYLESHEET_MAX_BYTES = 256 * 1024;
+
+async function fetchExternalCssFonts(html: string, baseUrl: string): Promise<string[]> {
+  // Find <link rel="stylesheet" href="..."> URLs in head.
+  const cssUrls: string[] = [];
+  const linkRegex = /<link\b[^>]*?>/gi;
+  for (const m of html.match(linkRegex) || []) {
+    if (!/rel\s*=\s*["']?stylesheet/i.test(m)) continue;
+    const hrefMatch = m.match(/href\s*=\s*["']([^"']+)["']/i);
+    if (!hrefMatch) continue;
+    const href = hrefMatch[1];
+    // Skip Google Fonts (already parsed in pass 1) and obvious non-CSS.
+    if (/fonts\.googleapis\.com|fonts\.gstatic\.com/i.test(href)) continue;
+    try {
+      const resolved = new URL(href, baseUrl).toString();
+      // Only keep http(s) URLs.
+      if (!/^https?:/i.test(resolved)) continue;
+      cssUrls.push(resolved);
+    } catch {
+      /* malformed URL; skip */
+    }
+    if (cssUrls.length >= MAX_STYLESHEETS) break;
+  }
+  if (cssUrls.length === 0) return [];
+
+  // Fetch in parallel, allSettled so individual failures don't kill the rest.
+  const results = await Promise.allSettled(cssUrls.map(fetchCssFonts));
+  const found = new Set<string>();
+  for (const r of results) {
+    if (r.status === "fulfilled") {
+      for (const name of r.value) found.add(name);
+    }
+  }
+  return Array.from(found);
+}
+
+async function fetchCssFonts(url: string): Promise<string[]> {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), STYLESHEET_TIMEOUT_MS);
+  let css = "";
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": USER_AGENT, Accept: "text/css,*/*" },
+      signal: ctrl.signal,
+      redirect: "follow",
+    });
+    if (!res.ok) return [];
+    const reader = res.body?.getReader();
+    if (!reader) {
+      css = await res.text();
+    } else {
+      const chunks: Uint8Array[] = [];
+      let total = 0;
+      while (total < STYLESHEET_MAX_BYTES) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        chunks.push(value);
+        total += value.length;
+      }
+      try {
+        await reader.cancel();
+      } catch {}
+      css = new TextDecoder("utf-8").decode(concat(chunks));
+    }
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(t);
+  }
+
+  return extractFontNamesFromCss(css);
+}
+
+function extractFontNamesFromCss(css: string): string[] {
+  const found = new Set<string>();
+
+  // @font-face blocks — the authoritative source. font-family inside a
+  // @font-face declares the NAME the site uses to reference the font.
+  const ffaceRegex = /@font-face\s*\{[^}]*?font-family\s*:\s*["']?([^"';{}]+?)["']?\s*[;}]/gi;
+  let m: RegExpExecArray | null;
+  while ((m = ffaceRegex.exec(css)) !== null) {
+    const candidate = cleanFontName(m[1]);
+    if (candidate) found.add(candidate);
+  }
+
+  // Naked font-family declarations — secondary signal (might pick up
+  // generic stacks; we filter those out).
+  const ffRegex = /font-family\s*:\s*["']([^"';{}]{2,40})["']/g;
+  while ((m = ffRegex.exec(css)) !== null) {
+    const candidate = cleanFontName(m[1]);
+    if (candidate) found.add(candidate);
+  }
+
+  return Array.from(found);
+}
+
+function cleanFontName(raw: string): string | null {
+  const name = raw.trim().replace(/\s+/g, " ");
+  if (name.length < 2 || name.length > 40) return null;
+  if (
+    /^(serif|sans-serif|monospace|cursive|fantasy|system-ui|inherit|initial|unset|ui-serif|ui-sans-serif|ui-monospace|ui-rounded|emoji)$/i.test(
+      name
+    )
+  ) {
+    return null;
+  }
+  return name;
 }

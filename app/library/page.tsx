@@ -39,11 +39,21 @@ const PALETTES: { id: PaletteId; label: string }[] = [
   { id: "sunset", label: "Sunset" },
 ];
 
-const FONT_PAIRS: { id: FontPair; label: string }[] = [
-  { id: "default", label: "Inter" },
-  { id: "sans-pair", label: "Geist + Inter" },
-  { id: "serif-sans", label: "Fraunces + Inter" },
-  { id: "display-body", label: "PP Editorial + Inter" },
+const FONT_PAIRS: { id: FontPair; label: string; group: "free" | "premium" }[] = [
+  // Free
+  { id: "inter", label: "Inter", group: "free" },
+  { id: "geist-inter", label: "Geist + Inter", group: "free" },
+  { id: "fraunces-inter", label: "Fraunces + Inter", group: "free" },
+  { id: "instrument-jakarta", label: "Instrument Serif + Plus Jakarta", group: "free" },
+  { id: "space-inter", label: "Space Grotesk + Inter", group: "free" },
+  { id: "cormorant-jakarta", label: "Cormorant + Plus Jakarta", group: "free" },
+  { id: "manrope", label: "Manrope", group: "free" },
+  { id: "newsreader-inter", label: "Newsreader + Inter", group: "free" },
+  { id: "mono-inter", label: "JetBrains Mono + Inter", group: "free" },
+  // Premium (fallback to curated free when license absent)
+  { id: "sohne-tiempos", label: "Söhne + Tiempos (premium)", group: "premium" },
+  { id: "founders-tight", label: "Founders Grotesk + Inter Tight (premium)", group: "premium" },
+  { id: "editorial-inter", label: "PP Editorial + Inter (premium)", group: "premium" },
 ];
 
 // ────── Sample content ──────
@@ -413,7 +423,7 @@ const SAMPLE = {
 export default function LibraryDemoPage() {
   const [palette, setPalette] = useState<PaletteId>("default");
   const [mode, setMode] = useState<Mode>("dark");
-  const [fontPair, setFontPair] = useState<FontPair>("default");
+  const [fontPair, setFontPair] = useState<FontPair>("inter");
 
   return (
     <div style={{ background: "#0A0A0A", color: "#EDEDED", minHeight: "100vh" }}>
@@ -429,7 +439,7 @@ export default function LibraryDemoPage() {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
             <Select label="Palette" value={palette} onChange={(v) => setPalette(v as PaletteId)} options={PALETTES} />
             <Select label="Mode" value={mode} onChange={(v) => setMode(v as Mode)} options={[{ id: "dark", label: "Dark" }, { id: "light", label: "Light" }]} />
-            <Select label="Type" value={fontPair} onChange={(v) => setFontPair(v as FontPair)} options={FONT_PAIRS} />
+            <FontSelect value={fontPair} onChange={setFontPair} />
           </div>
         </div>
       </header>
@@ -551,6 +561,38 @@ function Select<T extends string>({
             {o.label}
           </option>
         ))}
+      </select>
+    </label>
+  );
+}
+
+function FontSelect({
+  value,
+  onChange,
+}: {
+  value: FontPair;
+  onChange: (v: FontPair) => void;
+}) {
+  const free = FONT_PAIRS.filter((p) => p.group === "free");
+  const premium = FONT_PAIRS.filter((p) => p.group === "premium");
+  return (
+    <label className="inline-flex items-center gap-2">
+      <span className="text-[#888]">Type</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as FontPair)}
+        className="bg-[#131313] border border-[#2A2A2A] text-[#EDEDED] rounded-md px-2 py-1.5 outline-none focus:border-[#FAFAFA] cursor-pointer"
+      >
+        <optgroup label="Free">
+          {free.map((o) => (
+            <option key={o.id} value={o.id}>{o.label}</option>
+          ))}
+        </optgroup>
+        <optgroup label="Premium (license needed)">
+          {premium.map((o) => (
+            <option key={o.id} value={o.id}>{o.label}</option>
+          ))}
+        </optgroup>
       </select>
     </label>
   );
