@@ -90,11 +90,22 @@ export async function deployToVercel(opts: {
     url: string;
     projectId?: string;
     inspectorUrl?: string;
+    alias?: string[];
   };
+
+  // Vercel returns two URL families on a production deploy:
+  //   - data.url           e.g. site-abc123-h7g8j9k.vercel.app  (THIS deployment, changes every push)
+  //   - data.alias[]       e.g. ["site-abc123.vercel.app", "site-abc123-acme.vercel.app"]  (stable aliases the
+  //                        deployment is promoted to once READY — same across regenerations of the same project)
+  // We want the stable one so the operator can share a permanent URL.
+  // Pick the shortest .vercel.app alias (canonical form is `<slug>.vercel.app`).
+  const aliases = (data.alias || []).filter((a) => a.endsWith(".vercel.app"));
+  const stableUrl =
+    aliases.length > 0 ? aliases.sort((a, b) => a.length - b.length)[0] : data.url;
 
   return {
     deploymentId: data.id,
-    url: data.url, //  bare domain, no protocol
+    url: stableUrl, //  bare domain, no protocol
     projectId: data.projectId || "",
     inspectorUrl: data.inspectorUrl || `https://vercel.com/dashboard`,
   };
