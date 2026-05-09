@@ -112,6 +112,12 @@ export async function kickOffBrandGuidelines(url: string): Promise<BrandKickOffR
       capturedAt: cached.capturedAt,
     };
   }
+  // If screenshot already cached (previous poll persisted it), skip Apify.
+  // Poll uses cached shot directly — jobId is irrelevant in that path.
+  const cachedShot = await persistGet<CachedShot>("brand-shot", url);
+  if (cachedShot) {
+    return { status: "running", jobId: "cached" };
+  }
   const { runId } = await kickOffScreenshot(url);
   return { status: "running", jobId: runId };
 }

@@ -190,11 +190,13 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
                       ? "text-red-400"
                       : "text-[#666]";
                   const dur =
-                    s.state === "done" && s.durationMs > 0
-                      ? `${(s.durationMs / 1000).toFixed(1)}s`
-                      : s.state === "failed"
+                    s.state === "failed"
                       ? s.error.slice(0, 40)
-                      : "pending";
+                      : s.state === "pending"
+                      ? "pending"
+                      : s.durationMs > 0
+                      ? `${(s.durationMs / 1000).toFixed(1)}s`
+                      : "cached";
                   return (
                     <li key={key} className={`flex items-center gap-3 ${color}`}>
                       <span className="w-3">{icon}</span>

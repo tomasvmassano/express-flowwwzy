@@ -67,9 +67,9 @@ export const TechnicalFragmentSchema = z.object({
 export type TechnicalFragment = z.infer<typeof TechnicalFragmentSchema>;
 
 export const PrinciplesFragmentSchema = z.object({
-  designPrinciples: z.array(DesignPrincipleSchema).max(10).default([]),
-  sectionArchetypes: z.array(SectionArchetypeSchema).default([]),
-  webPrinciples: z.array(DesignPrincipleSchema).max(10).default([]),
+  designPrinciples: z.array(DesignPrincipleSchema).max(5).default([]),
+  sectionArchetypes: z.array(SectionArchetypeSchema).max(6).default([]),
+  webPrinciples: z.array(DesignPrincipleSchema).max(5).default([]),
   motion: MotionSystemSchema,
 });
 export type PrinciplesFragment = z.infer<typeof PrinciplesFragmentSchema>;
@@ -254,12 +254,12 @@ export async function runPrinciplesStage(
   css?: CssTokens
 ): Promise<PrinciplesFragment> {
   return await callClaudeWithTool({
-    systemPrompt: `És um designer sénior a articular os princípios de design + section archetypes + motion de uma marca.
+    systemPrompt: `És um designer sénior a articular os princípios de design + section archetypes + motion de uma marca. Sê CONCISO — frases curtas e densas, não parágrafos.
 ${SHARED_RULES}
-- Design principles: 4-6 numerados. Cada um título curto + descrição 2-3 frases que explica o "porquê". Concretos: "Dark by default", "Cream is decorative" — não "Modern and clean".
-- Section archetypes: 4-8 tipos de secção observados, com tratamento concreto.
-- Web principles: 4-6 numerados (princípios de extensão do site sem partir o sistema).
-- Motion: cubic-bezier values exatos quando aparecem nos CSS tokens. Senão deduz de easing language.
+- Design principles: EXATAMENTE 4 numerados. Título curto + descrição 1 frase. Concretos: "Dark by default", "Cream is decorative" — não "Modern and clean".
+- Section archetypes: 4-5 tipos de secção observados, descrição 1 frase cada.
+- Web principles: EXATAMENTE 4 numerados, descrição 1 frase cada.
+- Motion: cubic-bezier values exatos quando nos CSS tokens. Senão deduz de easing language.
 
 Devolve via a ferramenta extract_principles.`,
     toolName: "extract_principles",
