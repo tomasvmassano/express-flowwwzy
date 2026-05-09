@@ -121,16 +121,11 @@ export default function PreviewScreen() {
                   }
                 />
                 <Row
-                  label="Secções"
+                  label="VSL"
                   value={
-                    <div className="flex flex-wrap gap-1.5">
-                      {f.sections.length === 0 && <span className="text-gray-500 text-body-sm">A definir no brief</span>}
-                      {f.sections.map((s) => (
-                        <span key={s} className="text-body-sm px-2.5 py-1 rounded-full border border-divider">
-                          {s.replace(/^Outro: /, "")}
-                        </span>
-                      ))}
-                    </div>
+                    <span className="text-body-sm">
+                      {f.vsl.state === "have_it" ? "Sim, já tenho" : f.vsl.state === "will_record" ? "Vou gravar" : "Sem vídeo"}
+                    </span>
                   }
                 />
                 <Row label="Entrega prevista" value={deliveryDate || ""} last />

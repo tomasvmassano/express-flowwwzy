@@ -25,7 +25,7 @@ export const useForm = create<Store>()(
       goto: (step) => set({ step }),
     }),
     {
-      name: "flowwwzy-express-form-v2",
+      name: "flowwwzy-express-form-v3",
       storage: createJSONStorage(() => (typeof window !== "undefined" ? localStorage : ({} as Storage))),
       partialize: (s) => {
         const { setField, patch, reset, next, back, goto, ...rest } = s as unknown as Store;

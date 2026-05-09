@@ -130,6 +130,87 @@ export const LIBRARY: ComponentManifest[] = [
   },
 
   // ─────────────────────────────────────────────────────────────────────
+  // HERO — VSL variant
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "hero-video-vsl",
+    name: "Hero — VSL Video",
+    category: "hero",
+    moodTags: ["bold", "editorial", "luxurious", "tech"],
+    tone: { profCasual: 35, calmBold: 60, classicModern: 65 },
+    typography: {
+      primary: "sans-grotesque",
+      pairing: "single",
+      feel: "industrial",
+      expressiveness: 4,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "centered",
+    imagery: { style: "photographic", treatment: "graded", showsPeople: true },
+    motion: "snappy",
+    filePath: "components/library/heroes/HeroVideoVsl.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "royal", "coastal", "warm-sand"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline (1 linha)", type: "text-short", required: false, maxChars: 160 },
+      { key: "vslEmbedUrl", label: "VSL embed URL (YouTube/Vimeo/Wistia)", type: "url", required: true },
+      { key: "vslPosterUrl", label: "Thumbnail/poster URL", type: "url", required: false },
+      { key: "primaryCtaLabel", label: "CTA principal", type: "text-short", required: true, maxChars: 24 },
+      { key: "primaryCtaHref", label: "CTA principal — destino", type: "url", required: false },
+      { key: "secondaryCtaLabel", label: "CTA secundário", type: "text-short", required: false, maxChars: 24 },
+      { key: "secondaryCtaHref", label: "CTA secundário — destino", type: "url", required: false },
+      { key: "refundLine", label: "Linha da garantia/refund", type: "text-short", required: false, maxChars: 120 },
+      { key: "stats", label: "Stats strip (até 3, value + label)", type: "list", required: false },
+    ],
+    notes: "Use this when the project's vsl.state === 'have_it'. Falls back to hero-centered-display otherwise.",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // PROBLEM (canon)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "problem-list-agitation",
+    name: "Problem — Stacked Agitation Lines",
+    category: "problem",
+    moodTags: ["editorial", "bold", "minimalista"],
+    tone: { profCasual: 35, calmBold: 60, classicModern: 55 },
+    typography: {
+      primary: "sans-grotesque",
+      pairing: "single",
+      feel: "industrial",
+      expressiveness: 4,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "airy",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "calm",
+    filePath: "components/library/problem/ProblemListAgitation.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "royal", "warm-sand", "bold-red"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "painLines", label: "3-5 pain lines (uma por entry)", type: "list", required: true },
+      { key: "resolutionLine", label: "Linha de resolução (italic)", type: "text-short", required: false, maxChars: 120 },
+      { key: "resolutionAccent", label: "Palavras com accent color na resolution", type: "text-short", required: false, maxChars: 30 },
+    ],
+    notes: "Canon section #2 (Problem). Pain points stacked + optional resolution line.",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
   // SERVICES
   // ─────────────────────────────────────────────────────────────────────
   {
@@ -194,6 +275,43 @@ export const LIBRARY: ComponentManifest[] = [
       { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
       { key: "items", label: "Lista de serviços (título + descrição)", type: "list", required: true },
     ],
+  },
+
+  // ─────────────────────────────────────────────────────────────────────
+  // BENEFITS (canon)
+  // ─────────────────────────────────────────────────────────────────────
+  {
+    id: "benefits-grid-icons",
+    name: "Benefits — Icon Grid",
+    category: "benefits",
+    moodTags: ["clean", "minimalista", "editorial"],
+    tone: { profCasual: 40, calmBold: 45, classicModern: 60 },
+    typography: {
+      primary: "sans-geometric",
+      pairing: "single",
+      feel: "neutral",
+      expressiveness: 2,
+    },
+    palette: {
+      closestId: null,
+      dominantHex: ["#0A0A0A", "#131313", "#FAFAFA"],
+      background: "#0A0A0A",
+      isDarkMode: true,
+    },
+    density: "comfortable",
+    alignment: "left",
+    imagery: { style: "minimal-none", treatment: "raw", showsPeople: false },
+    motion: "snappy",
+    filePath: "components/library/benefits/BenefitsGridIcons.tsx",
+    exportName: "default",
+    compatiblePalettes: ["black-cream", "mono-plus", "coastal", "royal", "forest"],
+    slots: [
+      { key: "eyebrow", label: "Label", type: "text-short", required: false, maxChars: 40 },
+      { key: "headline", label: "Headline", type: "text-short", required: true, maxChars: 90 },
+      { key: "subheadline", label: "Sub-headline", type: "text-short", required: false, maxChars: 180 },
+      { key: "benefits", label: "2-6 benefits (icon, title, body)", type: "list", required: true },
+    ],
+    notes: "Canon section #4 (Benefits). Icons: clock, tag, spark, shield, zap, check.",
   },
 
   // ─────────────────────────────────────────────────────────────────────

@@ -14,6 +14,11 @@ export type Style =
   | "caloroso"
   | "clean";
 
+export type ReferencePurpose = "aspirational" | "current_site" | "competitor";
+export type ReferenceItem = { url: string; purpose: ReferencePurpose };
+export type VslSignal = { state: "have_it" | "will_record" | "no_vsl"; embedUrl?: string };
+export type ThemeStrategy = "preserve" | "refresh" | "neutral";
+
 export type FormData = {
   tier: Tier | null;
   style: Style | null;
@@ -23,8 +28,16 @@ export type FormData = {
   toneCalmBold: number;
   toneClassicModern: number;
   business: { name: string; what: string; differentiator: string };
+  /** Legacy flat URL list — kept for back-compat. Defaults to "aspirational" purpose. */
   references: string[];
-  sections: string[];
+  /** Per-URL purpose tagging (replaces references[] for new flows). */
+  referenceItems?: ReferenceItem[];
+  /** VSL signal — drives hero variant in the plan (text-hero vs hero-video-vsl). */
+  vsl: VslSignal;
+  /** Theme strategy. Defaults neutral; flips to preserve when brand guidelines extracted. */
+  themeStrategy: ThemeStrategy;
+  /** REMOVED: client no longer picks sections. Canon (landing-page-builder skill) is enforced. */
+  // sections: string[];
   details: { name: string; email: string; phone: string };
   needCopy: boolean;
   needLogo: boolean;
@@ -41,7 +54,9 @@ export const initialForm: FormData = {
   toneClassicModern: 50,
   business: { name: "", what: "", differentiator: "" },
   references: ["", "", ""],
-  sections: [],
+  referenceItems: undefined,
+  vsl: { state: "no_vsl" },
+  themeStrategy: "neutral",
   details: { name: "", email: "", phone: "" },
   needCopy: false,
   needLogo: false,

@@ -28,20 +28,8 @@ const palettes = [
   { id: "p8", name: "Sunset", colors: ["#1A0F1A", "#5C2D5C", "#F08C5C", "#FAEBE3"] },
 ];
 
-const sectionOptions = [
-  "Hero / Apresentação",
-  "Serviços / Produtos",
-  "Sobre nós",
-  "Testemunhos",
-  "FAQ",
-  "Contacto",
-  "Galeria / Portfolio",
-  "Blog",
-];
-
 export default function Configurator() {
   const f = useForm();
-  const [other, setOther] = useState("");
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => setHydrated(true), []);
 
@@ -85,7 +73,8 @@ export default function Configurator() {
             tone: { profCasual: f.toneProfCasual, calmBold: f.toneCalmBold, classicModern: f.toneClassicModern },
             business: f.business,
             references: f.references,
-            sections: f.sections,
+            vsl: f.vsl,
+            themeStrategy: f.themeStrategy,
             details: f.details,
             needCopy: f.needCopy,
             needLogo: f.needLogo,
@@ -142,7 +131,7 @@ export default function Configurator() {
                 {step === 3 && <Step3 />}
                 {step === 4 && <Step4 />}
                 {step === 5 && <Step5 />}
-                {step === 6 && <Step6 other={other} setOther={setOther} />}
+                {step === 6 && <Step6 />}
                 {step === 7 && <Step7 />}
               </motion.div>
             </AnimatePresence>
@@ -365,20 +354,17 @@ function Step5() {
   );
 }
 
-function Step6({ other, setOther }: { other: string; setOther: (v: string) => void }) {
-  const { references, sections, setField } = useForm();
+function Step6() {
+  const { references, vsl, setField } = useForm();
   const setRef = (i: number, v: string) => {
     const next = [...references]; next[i] = v; setField("references", next);
-  };
-  const toggleSection = (s: string) => {
-    setField("sections", sections.includes(s) ? sections.filter((x) => x !== s) : [...sections, s]);
   };
   return (
     <div>
       <h3 className="text-3xl md:text-h2 max-w-[22ch]" style={{ fontWeight: 500, lineHeight: 1.1, letterSpacing: "-0.02em" }}>
-        Inspiração e <span className="italic-accent">estrutura</span>.
+        Referências e <span className="italic-accent">vídeo</span>.
       </h3>
-      <p className="mt-4 text-gray-300">3 sites que adora (cole os links). Salte se quiser.</p>
+      <p className="mt-4 text-gray-300">3 sites que admira (cole os links). Salte se quiser.</p>
       <div className="mt-8 grid gap-4 max-w-[680px]">
         {[0, 1, 2].map((i) => (
           <input
@@ -394,35 +380,38 @@ function Step6({ other, setOther }: { other: string; setOther: (v: string) => vo
       </div>
 
       <div className="mt-14">
-        <p className="label mb-5">Que secções precisa no site?</p>
+        <p className="label mb-2">Tem VSL (vídeo de apresentação) para o site?</p>
+        <p className="text-gray-500 text-body-sm mb-5">O VSL muda totalmente o desenho do hero. Conte-nos.</p>
         <div className="flex flex-wrap gap-2.5">
-          {sectionOptions.map((s) => {
-            const on = sections.includes(s);
+          {([
+            { id: "have_it", label: "Sim, já tenho" },
+            { id: "will_record", label: "Vou gravar" },
+            { id: "no_vsl", label: "Não usar" },
+          ] as const).map((opt) => {
+            const on = vsl.state === opt.id;
             return (
               <button
-                key={s}
-                onClick={() => toggleSection(s)}
+                key={opt.id}
+                onClick={() => setField("vsl", { ...vsl, state: opt.id })}
                 className={`px-4 py-2.5 rounded-full text-body-sm border transition-colors duration-200 ${
                   on ? "bg-cream text-black border-cream" : "bg-transparent text-gray-300 border-divider hover:border-white"
                 }`}
               >
-                {on ? "✓ " : "+ "}{s}
+                {on ? "✓ " : ""}{opt.label}
               </button>
             );
           })}
         </div>
-        <div className="mt-5 max-w-[480px]">
+        {vsl.state === "have_it" && (
           <input
-            className="input-dark"
-            placeholder="Outra secção (opcional)"
-            value={other}
-            onChange={(e) => {
-              setOther(e.target.value);
-              const filtered = sections.filter((x) => !x.startsWith("Outro:"));
-              setField("sections", e.target.value ? [...filtered, `Outro: ${e.target.value}`] : filtered);
-            }}
+            className="input-dark mt-4 max-w-[680px]"
+            type="url"
+            inputMode="url"
+            placeholder="URL do vídeo (YouTube, Vimeo, Wistia)"
+            value={vsl.embedUrl || ""}
+            onChange={(e) => setField("vsl", { ...vsl, embedUrl: e.target.value })}
           />
-        </div>
+        )}
       </div>
     </div>
   );

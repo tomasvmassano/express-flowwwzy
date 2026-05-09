@@ -7,6 +7,9 @@ import LibraryRoot, { PaletteId, FontPair, Mode } from "@/components/library/_li
 import HeroCenteredDisplay from "@/components/library/heroes/HeroCenteredDisplay";
 import HeroSplitImageText from "@/components/library/heroes/HeroSplitImageText";
 import HeroBoldStatement from "@/components/library/heroes/HeroBoldStatement";
+import HeroVideoVsl from "@/components/library/heroes/HeroVideoVsl";
+import ProblemListAgitation from "@/components/library/problem/ProblemListAgitation";
+import BenefitsGridIcons from "@/components/library/benefits/BenefitsGridIcons";
 import ServicesGrid3Col from "@/components/library/services/ServicesGrid3Col";
 import ServicesAccordion from "@/components/library/services/ServicesAccordion";
 import TestimonialsRotatingQuote from "@/components/library/testimonials/TestimonialsRotatingQuote";
@@ -84,6 +87,61 @@ const SAMPLE = {
     byline:
       "Cada projeto é desenhado para converter, não para impressionar designers. Resultados primeiro, prémios depois.",
     primaryCtaLabel: "Falar connosco",
+  },
+  heroVsl: {
+    eyebrow: "Demo · 90s",
+    headline: "Veja como funciona, cara a cara.",
+    subheadline:
+      "Quem está por trás, como entregamos em dias, e exemplos reais. Mais rápido do que ler a página inteira.",
+    vslEmbedUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+    primaryCtaLabel: "Começar projeto",
+    secondaryCtaLabel: "Ver trabalho",
+    refundLine: "Garantia de devolução de 14 dias.",
+    stats: [
+      { value: "8 anos", label: "a construir sites para PMEs" },
+      { value: "60+", label: "projetos entregues" },
+      { value: "0", label: "agências subcontratadas" },
+    ],
+  },
+  problem: {
+    eyebrow: "Talvez te pareça familiar",
+    painLines: [
+      "Precisa de um site novo, mas não pode esperar 3 meses.",
+      "As agências querem €5.000 e várias reuniões antes sequer de começar.",
+      "Os templates são genéricos e parecem-se todos.",
+      "Os freelancers desaparecem a meio do projeto.",
+    ],
+    resolutionLine: "Finalmente existe uma alternativa melhor.",
+    resolutionAccent: "alternativa melhor",
+  },
+  benefits: {
+    eyebrow: "O que muda para si",
+    headline: "Trabalho de estúdio, sem o calendário de estúdio.",
+    benefits: [
+      {
+        icon: "clock" as const,
+        title: "Online em dias, não em meses",
+        body:
+          "Express Page em 48-72h. Site completo em 5 dias. Brand completa em 7 dias. O calendário é firme.",
+      },
+      {
+        icon: "tag" as const,
+        title: "Preço fechado, do início ao fim",
+        body:
+          "€490, €890 ou €1.490. Sem orçamentos por hora. Sem extras a meio do projeto.",
+      },
+      {
+        icon: "spark" as const,
+        title: "Design à medida, pensado para vender",
+        body:
+          "Cada secção é desenhada para o seu negócio, não tirada de um template. Mobile-first, otimizado para conversão.",
+      },
+      {
+        icon: "shield" as const,
+        title: "Risco zero — garantia de 14 dias",
+        body: "Tem direito a uma ronda de revisões incluída. Devolvemos 100% se mesmo assim não gostar.",
+      },
+    ],
   },
   servicesGrid: {
     eyebrow: "Serviços",
@@ -454,6 +512,15 @@ export default function LibraryDemoPage() {
 
         <SectionLabel id="hero-bold-statement" lote="1" />
         <HeroBoldStatement {...SAMPLE.heroBold} />
+
+        <SectionLabel id="hero-video-vsl" lote="3" />
+        <HeroVideoVsl {...SAMPLE.heroVsl} />
+
+        <SectionLabel id="problem-list-agitation" lote="3" />
+        <ProblemListAgitation {...SAMPLE.problem} />
+
+        <SectionLabel id="benefits-grid-icons" lote="3" />
+        <BenefitsGridIcons {...SAMPLE.benefits} />
 
         <SectionLabel id="services-grid-3col" lote="1" />
         <ServicesGrid3Col {...SAMPLE.servicesGrid} />

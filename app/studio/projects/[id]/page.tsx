@@ -323,29 +323,55 @@ function FormSection({
           }
         />
         <Field
-          label="Sections"
+          label="VSL"
           value={
             <div className="flex flex-wrap gap-1">
-              {COMPONENT_CATEGORIES.map((c) => {
-                const active = form.sections.includes(c);
+              {(["have_it", "will_record", "no_vsl"] as const).map((opt) => {
+                const active = form.vsl?.state === opt;
                 return (
                   <button
-                    key={c}
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        sections: active
-                          ? form.sections.filter((x) => x !== c)
-                          : [...form.sections, c],
-                      })
-                    }
+                    key={opt}
+                    onClick={() => setForm({ ...form, vsl: { ...(form.vsl ?? { state: "no_vsl" }), state: opt } })}
                     className={`px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
-                      active
-                        ? "bg-[#1A1A1A] text-[#EDEDED] border-[#666]"
-                        : "bg-transparent text-[#666] border-[#2A2A2A] hover:border-[#444]"
+                      active ? "bg-[#1A1A1A] text-[#EDEDED] border-[#666]" : "bg-transparent text-[#666] border-[#2A2A2A] hover:border-[#444]"
                     }`}
                   >
-                    {c}
+                    {opt.replace("_", " ")}
+                  </button>
+                );
+              })}
+            </div>
+          }
+        />
+        {form.vsl?.state === "have_it" && (
+          <Field
+            label="VSL URL"
+            value={
+              <input
+                className="input-row"
+                type="url"
+                placeholder="https://youtube.com/embed/..."
+                value={form.vsl.embedUrl || ""}
+                onChange={(e) => setForm({ ...form, vsl: { ...form.vsl, embedUrl: e.target.value } })}
+              />
+            }
+          />
+        )}
+        <Field
+          label="Theme strategy"
+          value={
+            <div className="flex flex-wrap gap-1">
+              {(["preserve", "refresh", "neutral"] as const).map((opt) => {
+                const active = form.themeStrategy === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setForm({ ...form, themeStrategy: opt })}
+                    className={`px-2 py-0.5 rounded-full text-[10px] border transition-colors ${
+                      active ? "bg-[#1A1A1A] text-[#EDEDED] border-[#666]" : "bg-transparent text-[#666] border-[#2A2A2A] hover:border-[#444]"
+                    }`}
+                  >
+                    {opt}
                   </button>
                 );
               })}
@@ -388,13 +414,19 @@ function ReferencesSection({
   async function addRef() {
     const url = adding.trim();
     if (!url || !/^https?:\/\//i.test(url)) return;
-    const refs: ProjectReference[] = [...project.references, { url, status: "pending" }];
+    const refs: ProjectReference[] = [...project.references, { url, status: "pending", purpose: "aspirational" }];
     await onPatch({ references: refs });
     setAdding("");
   }
 
   async function removeRef(idx: number) {
     const refs = project.references.filter((_, i) => i !== idx);
+    await onPatch({ references: refs });
+  }
+
+  async function setRefPurpose(idx: number, purpose: ProjectReference["purpose"]) {
+    const refs = [...project.references];
+    refs[idx] = { ...refs[idx], purpose };
     await onPatch({ references: refs });
   }
 
@@ -479,8 +511,18 @@ function ReferencesSection({
               >
                 {r.url}
               </a>
-              <div className="flex items-center gap-3 mt-1.5 text-[11px]">
+              <div className="flex items-center gap-3 mt-1.5 text-[11px] flex-wrap">
                 <RefStatus status={r.status} error={r.error} />
+                <select
+                  value={r.purpose || "aspirational"}
+                  onChange={(e) => setRefPurpose(i, e.target.value as ProjectReference["purpose"])}
+                  className="bg-transparent border border-[#2A2A2A] rounded px-1.5 py-0.5 text-[10px] text-[#CCC] focus:outline-none focus:border-[#666] cursor-pointer"
+                  title="Purpose: how this ref is used downstream"
+                >
+                  <option value="aspirational">aspirational</option>
+                  <option value="current_site">current_site</option>
+                  <option value="competitor">competitor</option>
+                </select>
                 {r.dna && (
                   <span className="text-[#666] font-mono truncate">
                     {r.dna.moodTags.slice(0, 3).join(", ")}

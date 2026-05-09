@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Project, BrandGuidelines } from "@/lib/studio/project/types";
 import type { ExtractedBrandGuidelines, ColorEntry } from "@/lib/studio/brand/types";
+import { computeQualityScore } from "@/lib/studio/brand/qualityScore";
 
 type Props = {
   project: Project;
@@ -145,11 +146,39 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
 function BrandGuidelinesView({ guidelines: g }: { guidelines: BrandGuidelines }) {
   const eg = g.extracted;
   const sourceUrl = g.source.type === "url" ? g.source.url : undefined;
+  const quality = useMemo(() => computeQualityScore(eg), [eg]);
+  const qBg =
+    quality.score >= 70
+      ? "bg-emerald-950/30 border-emerald-900/60"
+      : quality.score >= 50
+      ? "bg-amber-950/30 border-amber-900/60"
+      : "bg-red-950/30 border-red-900/60";
+  const qFill =
+    quality.score >= 70 ? "bg-emerald-400" : quality.score >= 50 ? "bg-amber-400" : "bg-red-400";
+  const qText =
+    quality.score >= 70 ? "text-emerald-300" : quality.score >= 50 ? "text-amber-300" : "text-red-300";
 
   return (
     <div className="space-y-5 text-xs">
       <div className="text-[10px] text-[#666]">
         Source: {sourceUrl ? <a href={sourceUrl} target="_blank" rel="noopener" className="underline hover:text-[#CCC]">{sourceUrl}</a> : "uploaded file"} · captured {new Date(g.capturedAt).toLocaleString("pt-PT")}
+      </div>
+
+      <div className={`border rounded p-3 ${qBg}`}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#888]">Quality score</span>
+          <span className={`font-mono font-bold ${qText}`}>{quality.score}/100</span>
+        </div>
+        <div className="h-1 bg-[#1F1F1F] rounded-full overflow-hidden">
+          <div className={`h-full transition-all duration-500 ${qFill}`} style={{ width: `${quality.score}%` }} />
+        </div>
+        {quality.flags.length > 0 && (
+          <ul className="mt-3 space-y-0.5 text-[11px] text-[#CCC]">
+            {quality.flags.map((f, i) => (
+              <li key={i}>· {f}</li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Brand */}

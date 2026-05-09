@@ -138,7 +138,9 @@ export type MotionStyle = (typeof MOTION_STYLES)[number];
 
 export const COMPONENT_CATEGORIES = [
   "hero",
+  "problem",
   "services",
+  "benefits",
   "about",
   "testimonials",
   "faq",
