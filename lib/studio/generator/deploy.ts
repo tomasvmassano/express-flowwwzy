@@ -93,19 +93,14 @@ export async function deployToVercel(opts: {
     alias?: string[];
   };
 
-  // Vercel returns two URL families on a production deploy:
-  //   - data.url           e.g. site-abc123-h7g8j9k.vercel.app  (THIS deployment, changes every push)
-  //   - data.alias[]       e.g. ["site-abc123.vercel.app", "site-abc123-acme.vercel.app"]  (stable aliases the
-  //                        deployment is promoted to once READY — same across regenerations of the same project)
-  // We want the stable one so the operator can share a permanent URL.
-  // Pick the shortest .vercel.app alias (canonical form is `<slug>.vercel.app`).
-  const aliases = (data.alias || []).filter((a) => a.endsWith(".vercel.app"));
-  const stableUrl =
-    aliases.length > 0 ? aliases.sort((a, b) => a.length - b.length)[0] : data.url;
-
+  // data.url is the per-deployment URL (with random hash) — works
+  // immediately, even mid-build. data.alias[] holds the stable
+  // production aliases but those only resolve once the deploy is READY,
+  // so handing them out before that resolves to a 404 NOT_FOUND.
+  // Until we wire a post-ready swap, use the per-deployment URL.
   return {
     deploymentId: data.id,
-    url: stableUrl, //  bare domain, no protocol
+    url: data.url, //  bare domain, no protocol
     projectId: data.projectId || "",
     inspectorUrl: data.inspectorUrl || `https://vercel.com/dashboard`,
   };
