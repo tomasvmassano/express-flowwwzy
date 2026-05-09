@@ -58,7 +58,26 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
         body: JSON.stringify({ url }),
       });
       const kickData = await kickRes.json();
-      if (!kickRes.ok || !kickData.jobId) {
+      if (!kickRes.ok) {
+        setError(kickData.message || kickData.error || `kickoff failed (${kickRes.status})`);
+        setRunning(false);
+        return;
+      }
+      // Cache hit at kickoff — final guidelines already available, no polling needed.
+      if (kickData.status === "done" && kickData.guidelines) {
+        const guidelines: BrandGuidelines = {
+          source: { type: "url", url },
+          capturedAt: kickData.capturedAt || new Date().toISOString(),
+          extracted: kickData.guidelines as BrandGuidelines["extracted"],
+          cssTokens: kickData.cssTokens,
+        };
+        await onPatch({ brandGuidelines: guidelines });
+        setRunning(false);
+        setProgress("");
+        setUrl("");
+        return;
+      }
+      if (!kickData.jobId) {
         setError(kickData.message || kickData.error || `kickoff failed (${kickRes.status})`);
         setRunning(false);
         return;

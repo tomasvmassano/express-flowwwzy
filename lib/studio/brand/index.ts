@@ -108,7 +108,7 @@ const POLL_BUDGET_MS = 50_000;
 // ─── Public API ──────────────────────────────────────────────────────
 
 export async function kickOffBrandGuidelines(url: string): Promise<BrandKickOffResult> {
-  const cached = await persistGet<CachedBrand>("brand", url);
+  const cached = await persistGet<CachedBrand>("brand-v2", url);
   if (cached) {
     return {
       status: "done",
@@ -135,7 +135,7 @@ export async function pollBrandGuidelines(
   const t0 = Date.now();
 
   // ─── Final result ──
-  const cachedFinal = await persistGet<CachedBrand>("brand", url);
+  const cachedFinal = await persistGet<CachedBrand>("brand-v2", url);
   if (cachedFinal) {
     return {
       status: "done",
@@ -347,7 +347,7 @@ export async function pollBrandGuidelines(
         : undefined,
     };
     const capturedAt = new Date().toISOString();
-    await persistSet<CachedBrand>("brand", url, {
+    await persistSet<CachedBrand>("brand-v2", url, {
       guidelines,
       cssTokens: html.cssTokens,
       hints: html.hints,
