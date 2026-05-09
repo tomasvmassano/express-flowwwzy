@@ -19,6 +19,7 @@ import { kickOffScreenshot, pollScreenshot } from "./screenshot";
 import { analyzeScreenshot } from "./analyze";
 import { enrichFromHtml, EnrichmentHints } from "./html-enrich";
 import { getCached, setCached } from "./cache";
+import { persistGet, persistSet } from "../persistentCache";
 
 export type KickOffResult =
   | { status: "running"; jobId: string }
@@ -41,9 +42,15 @@ export type PollResult =
  * a previous extraction, returns the DNA directly without hitting Apify.
  */
 export async function kickOffExtraction(url: string): Promise<KickOffResult> {
-  const cached = getCached(url);
-  if (cached) {
-    return { status: "done", dna: cached, fromCache: true };
+  const memCached = getCached(url);
+  if (memCached) {
+    return { status: "done", dna: memCached, fromCache: true };
+  }
+  // Persistent cache survives cold starts.
+  const persisted = await persistGet<ReferenceDNA>("ref", url);
+  if (persisted) {
+    setCached(url, persisted); //  warm in-memory layer for this instance
+    return { status: "done", dna: persisted, fromCache: true };
   }
   const { runId } = await kickOffScreenshot(url);
   return { status: "running", jobId: runId };
@@ -60,13 +67,24 @@ export async function kickOffExtraction(url: string): Promise<KickOffResult> {
 export async function pollExtraction(jobId: string, url: string): Promise<PollResult> {
   const t0 = Date.now();
 
-  // Cache check — if a previous successful poll cached this URL's DNA,
-  // skip everything.
+  // In-memory cache check (warm function instance).
   const cached = getCached(url);
   if (cached) {
     return {
       status: "done",
       dna: cached,
+      hints: { declaredFonts: [] },
+      fromCache: true,
+      timings: { totalMs: Date.now() - t0 },
+    };
+  }
+  // Persistent cache (survives cold starts and previous-run timeouts).
+  const persisted = await persistGet<ReferenceDNA>("ref", url);
+  if (persisted) {
+    setCached(url, persisted);
+    return {
+      status: "done",
+      dna: persisted,
       hints: { declaredFonts: [] },
       fromCache: true,
       timings: { totalMs: Date.now() - t0 },
@@ -119,6 +137,7 @@ export async function pollExtraction(jobId: string, url: string): Promise<PollRe
   };
 
   setCached(url, reference);
+  await persistSet("ref", url, reference);
 
   return {
     status: "done",

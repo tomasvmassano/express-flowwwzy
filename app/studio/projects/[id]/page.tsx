@@ -463,17 +463,45 @@ function ReferencesSection({
 
     // Poll
     let polls = 0;
+    let consecutiveBad = 0;
     const maxPolls = 60; //  ~3 minutes at 3s intervals
     while (polls < maxPolls) {
       polls++;
       await new Promise((r) => setTimeout(r, 3000));
-      const qs = new URLSearchParams({ jobId: kickData.jobId, url: ref.url });
-      const pollRes = await fetch(`/api/studio/extract-reference?${qs.toString()}`, { cache: "no-store" });
-      const pollData = await pollRes.json();
+      let pollData: { status?: string; dna?: unknown; hints?: unknown; error?: string };
+      try {
+        const qs = new URLSearchParams({ jobId: kickData.jobId, url: ref.url });
+        const pollRes = await fetch(`/api/studio/extract-reference?${qs.toString()}`, { cache: "no-store" });
+        const ct = pollRes.headers.get("content-type") || "";
+        if (!ct.includes("application/json")) {
+          // Vercel function timeout returns HTML error page; treat as
+          // transient — the post-Apify cache write may have succeeded
+          // even if the response timed out.
+          consecutiveBad++;
+          if (consecutiveBad > 5) {
+            const refs = [...startedRefs];
+            refs[idx] = { ...ref, status: "failed", jobId: kickData.jobId, error: `${consecutiveBad}x non-JSON responses` };
+            await onPatch({ references: refs });
+            return;
+          }
+          continue;
+        }
+        pollData = await pollRes.json();
+        consecutiveBad = 0;
+      } catch (e) {
+        consecutiveBad++;
+        if (consecutiveBad > 5) {
+          const refs = [...startedRefs];
+          refs[idx] = { ...ref, status: "failed", jobId: kickData.jobId, error: String(e) };
+          await onPatch({ references: refs });
+          return;
+        }
+        continue;
+      }
 
       if (pollData.status === "done") {
         const refs = [...startedRefs];
-        refs[idx] = { ...ref, status: "done", jobId: kickData.jobId, dna: pollData.dna, hints: pollData.hints };
+        refs[idx] = { ...ref, status: "done", jobId: kickData.jobId, dna: pollData.dna as ProjectReference["dna"], hints: pollData.hints as ProjectReference["hints"] };
         await onPatch({ references: refs });
         return;
       }

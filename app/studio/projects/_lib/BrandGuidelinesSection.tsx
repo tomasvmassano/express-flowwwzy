@@ -42,11 +42,39 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
 
       // Poll
       const maxPolls = 80;
+      let consecutiveBadResponses = 0;
       for (let i = 0; i < maxPolls; i++) {
         await new Promise((r) => setTimeout(r, 4000));
-        const qs = new URLSearchParams({ jobId: kickData.jobId, url });
-        const pollRes = await fetch(`/api/studio/brand-guidelines?${qs.toString()}`, { cache: "no-store" });
-        const pollData = await pollRes.json();
+        let pollData: { status?: string; elapsedMs?: number; error?: string; capturedAt?: string; guidelines?: unknown; cssTokens?: unknown };
+        try {
+          const qs = new URLSearchParams({ jobId: kickData.jobId, url });
+          const pollRes = await fetch(`/api/studio/brand-guidelines?${qs.toString()}`, { cache: "no-store" });
+          // Vercel function timeouts return text/html (504 page), not JSON.
+          // Treat anything non-JSON as a transient retry so the next poll
+          // can pick up the cached result the timed-out poll persisted.
+          const ct = pollRes.headers.get("content-type") || "";
+          if (!ct.includes("application/json")) {
+            consecutiveBadResponses++;
+            setProgress(`A retomar… (${pollRes.status})`);
+            if (consecutiveBadResponses > 5) {
+              setError(`Backend não respondeu em JSON ${consecutiveBadResponses}x consecutivas. Tenta novamente.`);
+              setRunning(false);
+              return;
+            }
+            continue;
+          }
+          pollData = await pollRes.json();
+          consecutiveBadResponses = 0;
+        } catch (e) {
+          consecutiveBadResponses++;
+          setProgress(`Network glitch, a retomar…`);
+          if (consecutiveBadResponses > 5) {
+            setError(String(e));
+            setRunning(false);
+            return;
+          }
+          continue;
+        }
 
         if (pollData.status === "running") {
           setProgress(`Apify a correr… ${Math.round((pollData.elapsedMs || 0) / 1000)}s`);
@@ -61,8 +89,8 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
           setProgress("Análise terminada. A guardar no projeto…");
           const guidelines: BrandGuidelines = {
             source: { type: "url", url },
-            capturedAt: pollData.capturedAt,
-            extracted: pollData.guidelines,
+            capturedAt: pollData.capturedAt || new Date().toISOString(),
+            extracted: pollData.guidelines as BrandGuidelines["extracted"],
             cssTokens: pollData.cssTokens,
           };
           await onPatch({ brandGuidelines: guidelines });
