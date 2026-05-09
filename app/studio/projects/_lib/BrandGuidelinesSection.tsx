@@ -2,8 +2,26 @@
 
 import { useState, useMemo } from "react";
 import type { Project, BrandGuidelines } from "@/lib/studio/project/types";
-import type { ExtractedBrandGuidelines, ColorEntry } from "@/lib/studio/brand/types";
+import type { ColorEntry } from "@/lib/studio/brand/types";
+import type { StageMap } from "@/lib/studio/brand";
 import { computeQualityScore } from "@/lib/studio/brand/qualityScore";
+
+const STAGE_LABELS: Record<keyof StageMap, string> = {
+  screenshot: "Screenshot",
+  htmlData: "HTML + CSS",
+  identity: "Identity",
+  visuals: "Logo + Colors",
+  technical: "Typography + Layout",
+  principles: "Principles + Motion",
+};
+const STAGE_ORDER: (keyof StageMap)[] = [
+  "screenshot",
+  "htmlData",
+  "identity",
+  "visuals",
+  "technical",
+  "principles",
+];
 
 type Props = {
   project: Project;
@@ -15,6 +33,7 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const [stages, setStages] = useState<StageMap | null>(null);
 
   const existing = project.brandGuidelines;
 
@@ -25,6 +44,7 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
     }
     setRunning(true);
     setError(null);
+    setStages(null);
     setProgress("A iniciar Apify…");
 
     try {
@@ -45,7 +65,7 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
       let consecutiveBadResponses = 0;
       for (let i = 0; i < maxPolls; i++) {
         await new Promise((r) => setTimeout(r, 4000));
-        let pollData: { status?: string; elapsedMs?: number; error?: string; capturedAt?: string; guidelines?: unknown; cssTokens?: unknown };
+        let pollData: { status?: string; elapsedMs?: number; error?: string; capturedAt?: string; guidelines?: unknown; cssTokens?: unknown; stages?: StageMap };
         try {
           const qs = new URLSearchParams({ jobId: kickData.jobId, url });
           const pollRes = await fetch(`/api/studio/brand-guidelines?${qs.toString()}`, { cache: "no-store" });
@@ -76,8 +96,9 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
           continue;
         }
 
+        if (pollData.stages) setStages(pollData.stages);
         if (pollData.status === "running") {
-          setProgress(`Apify a correr… ${Math.round((pollData.elapsedMs || 0) / 1000)}s`);
+          setProgress(`A processar… ${Math.round((pollData.elapsedMs || 0) / 1000)}s`);
           continue;
         }
         if (pollData.status === "failed") {
@@ -155,6 +176,34 @@ export default function BrandGuidelinesSection({ project, onPatch }: Props) {
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
                 {progress}
               </div>
+            )}
+            {stages && (
+              <ul className="mt-3 space-y-1 text-[11px] font-mono">
+                {STAGE_ORDER.map((key) => {
+                  const s = stages[key];
+                  const icon =
+                    s.state === "done" ? "✓" : s.state === "failed" ? "✗" : "·";
+                  const color =
+                    s.state === "done"
+                      ? "text-emerald-400"
+                      : s.state === "failed"
+                      ? "text-red-400"
+                      : "text-[#666]";
+                  const dur =
+                    s.state === "done" && s.durationMs > 0
+                      ? `${(s.durationMs / 1000).toFixed(1)}s`
+                      : s.state === "failed"
+                      ? s.error.slice(0, 40)
+                      : "pending";
+                  return (
+                    <li key={key} className={`flex items-center gap-3 ${color}`}>
+                      <span className="w-3">{icon}</span>
+                      <span className="w-32 text-[#CCC]">{STAGE_LABELS[key]}</span>
+                      <span className="text-[#666] truncate">{dur}</span>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
             {error && (
               <div className="mt-3 text-[11px] text-red-400 break-words">{error}</div>

@@ -1,27 +1,41 @@
 /**
- * Brand guidelines extractor — orchestrator with two-phase post-Apify
- * pipeline so each individual poll fits under Vercel's 60s ceiling.
+ * Brand guidelines extractor — multi-stage pipeline.
  *
- * Polling state machine (each call ≤ 60s):
- *   1. Final cache hit?           → done (instant)
- *   2. Tmp screenshot cache hit?  → run analysis phase only (HTML+CSS+vision)
- *   3. Apify status check         → running | failed | succeeded-cache-shot
+ * Each individual poll runs as much as fits in a 50s budget. Stages:
  *
- *   When Apify SUCCEEDED, we don't run analysis in the same poll — we
- *   write the resized screenshot to KV and return "running". The next
- *   poll lands at step 2 and runs analysis with a fresh 60s budget.
+ *   0. screenshot   Apify run → fetch + sharp resize → KV "brand-shot"
+ *   1. html-data    HTML fetch + CSS deep tokenizer  → KV "brand-html"
+ *   2. identity     Claude vision (small)            → KV "brand-stage-identity"
+ *   3. visuals      Claude vision (logo + colors)    → KV "brand-stage-visuals"
+ *   4. technical    Claude vision (typo + layout)    → KV "brand-stage-technical"
+ *   5. principles   Claude vision (rules + motion)   → KV "brand-stage-principles"
+ *   6. assemble     Merge fragments → ExtractedBrandGuidelines → KV "brand"
  *
- *   This split is what saved scale-labs.com — the heavy CSS tokenizer +
- *   Claude vision combined with screenshot fetch was overflowing 60s
- *   on a single poll.
+ * Each Claude stage is 5-12s. Each poll handles whatever fits in 50s
+ * before returning "running" with stage status. The operator sees per-
+ * stage progress in the UI ("Identity ✓", "Visuals ⏳").
+ *
+ * If a single stage fails, others continue; the operator can re-extract
+ * just that stage by clearing its cache.
  */
 
 import { kickOffScreenshot, pollScreenshot } from "../extractor/screenshot";
 import { enrichFromHtml, EnrichmentHints } from "../extractor/html-enrich";
-import { analyzeForBrandGuidelines } from "./analyze";
 import { extractCssTokens, CssTokens } from "./cssTokenizer";
 import type { ExtractedBrandGuidelines } from "./types";
 import { persistGet, persistSet } from "../persistentCache";
+import {
+  IdentityFragment,
+  VisualsFragment,
+  TechnicalFragment,
+  PrinciplesFragment,
+  runIdentityStage,
+  runVisualsStage,
+  runTechnicalStage,
+  runPrinciplesStage,
+} from "./stages";
+
+// ─── Cache shapes ─────────────────────────────────────────────────────
 
 type CachedBrand = {
   guidelines: ExtractedBrandGuidelines;
@@ -30,13 +44,30 @@ type CachedBrand = {
   capturedAt: string;
 };
 
-/** Tmp cache between polls — bridges the Apify-done → analysis split. */
-type TmpScreenshot = {
+type CachedShot = {
   screenshotBase64: string;
   contentType: "image/jpeg";
   apifyUrl: string;
   runDurationMs: number;
-  capturedAt: string;
+};
+
+type CachedHtmlData = {
+  hints: EnrichmentHints;
+  cssTokens: CssTokens;
+};
+
+type StageStatus =
+  | { state: "pending" }
+  | { state: "done"; durationMs: number }
+  | { state: "failed"; error: string };
+
+export type StageMap = {
+  screenshot: StageStatus;
+  htmlData: StageStatus;
+  identity: StageStatus;
+  visuals: StageStatus;
+  technical: StageStatus;
+  principles: StageStatus;
 };
 
 export type BrandKickOffResult =
@@ -50,27 +81,27 @@ export type BrandKickOffResult =
     };
 
 export type BrandPollResult =
-  | { status: "running"; elapsedMs: number }
+  | {
+      status: "running";
+      elapsedMs: number;
+      stages: StageMap;
+    }
   | {
       status: "done";
       guidelines: ExtractedBrandGuidelines;
       cssTokens: CssTokens;
       hints: EnrichmentHints;
       capturedAt: string;
-      timings: {
-        totalMs: number;
-        htmlMs?: number;
-        cssMs?: number;
-        analyzeMs?: number;
-        runDurationMs?: number;
-      };
+      stages: StageMap;
     }
   | { status: "failed"; error: string };
 
-// ─── Kick off ─────────────────────────────────────────────────────────
+// Per-poll budget — leave 10s headroom under Vercel hobby ceiling.
+const POLL_BUDGET_MS = 50_000;
+
+// ─── Public API ──────────────────────────────────────────────────────
 
 export async function kickOffBrandGuidelines(url: string): Promise<BrandKickOffResult> {
-  // Persistent cache hit — skip Apify entirely.
   const cached = await persistGet<CachedBrand>("brand", url);
   if (cached) {
     return {
@@ -85,108 +116,215 @@ export async function kickOffBrandGuidelines(url: string): Promise<BrandKickOffR
   return { status: "running", jobId: runId };
 }
 
-// ─── Poll ─────────────────────────────────────────────────────────────
-
 export async function pollBrandGuidelines(
   jobId: string,
   url: string
 ): Promise<BrandPollResult> {
   const t0 = Date.now();
 
-  // 1) Final result cache. Fast path.
-  const cached = await persistGet<CachedBrand>("brand", url);
-  if (cached) {
+  // ─── Final result ──
+  const cachedFinal = await persistGet<CachedBrand>("brand", url);
+  if (cachedFinal) {
     return {
       status: "done",
-      guidelines: cached.guidelines,
-      cssTokens: cached.cssTokens,
-      hints: cached.hints,
-      capturedAt: cached.capturedAt,
-      timings: { totalMs: Date.now() - t0 },
+      guidelines: cachedFinal.guidelines,
+      cssTokens: cachedFinal.cssTokens,
+      hints: cachedFinal.hints,
+      capturedAt: cachedFinal.capturedAt,
+      stages: allDoneStages(),
     };
   }
 
-  // 2) Tmp screenshot cache. A previous poll already pulled the screenshot
-  // from Apify; this poll runs the heavy analysis with a fresh budget.
-  const tmp = await persistGet<TmpScreenshot>("brand-tmp", url);
-  if (tmp) {
-    return await runAnalysisPhase(url, tmp, t0);
-  }
-
-  // 3) No cache — check Apify.
-  const shotResult = await pollScreenshot(jobId);
-  if (shotResult.status === "running") {
-    return { status: "running", elapsedMs: shotResult.elapsedMs };
-  }
-  if (shotResult.status === "failed") {
-    return { status: "failed", error: shotResult.error };
-  }
-
-  // SUCCEEDED — write resized screenshot to tmp KV and return "running" so
-  // the next poll runs analysis with a fresh 60s budget.
-  const screenshot = shotResult.screenshot;
-  const tmpEntry: TmpScreenshot = {
-    screenshotBase64: screenshot.buffer.toString("base64"),
-    contentType: "image/jpeg",
-    apifyUrl: screenshot.apifyUrl,
-    runDurationMs: shotResult.runDurationMs,
-    capturedAt: new Date().toISOString(),
+  const stages: StageMap = {
+    screenshot: { state: "pending" },
+    htmlData: { state: "pending" },
+    identity: { state: "pending" },
+    visuals: { state: "pending" },
+    technical: { state: "pending" },
+    principles: { state: "pending" },
   };
-  await persistSet("brand-tmp", url, tmpEntry);
 
-  return { status: "running", elapsedMs: shotResult.runDurationMs };
+  // ─── Stage 0: screenshot ──
+  let shot = await persistGet<CachedShot>("brand-shot", url);
+  if (shot) {
+    stages.screenshot = { state: "done", durationMs: 0 };
+  } else {
+    if (Date.now() - t0 > POLL_BUDGET_MS) {
+      return runningResult(stages, t0, undefined);
+    }
+    const tShot = Date.now();
+    const sr = await pollScreenshot(jobId);
+    if (sr.status === "running") {
+      return { status: "running", elapsedMs: sr.elapsedMs, stages };
+    }
+    if (sr.status === "failed") {
+      return { status: "failed", error: sr.error };
+    }
+    shot = {
+      screenshotBase64: sr.screenshot.buffer.toString("base64"),
+      contentType: "image/jpeg",
+      apifyUrl: sr.screenshot.apifyUrl,
+      runDurationMs: sr.runDurationMs,
+    };
+    await persistSet("brand-shot", url, shot);
+    stages.screenshot = { state: "done", durationMs: Date.now() - tShot };
+  }
+
+  // ─── Stage 1: html data ──
+  let html = await persistGet<CachedHtmlData>("brand-html", url);
+  if (html) {
+    stages.htmlData = { state: "done", durationMs: 0 };
+  } else {
+    if (Date.now() - t0 > POLL_BUDGET_MS) {
+      return runningResult(stages, t0, shot.runDurationMs);
+    }
+    const tHtml = Date.now();
+    try {
+      const [rawHtml, hints] = await Promise.all([
+        fetch(url, { redirect: "follow" })
+          .then((r) => r.text())
+          .catch(() => ""),
+        enrichFromHtml(url),
+      ]);
+      const cssTokens = await extractCssTokens(url, rawHtml);
+      html = { hints, cssTokens };
+      await persistSet("brand-html", url, html);
+      stages.htmlData = { state: "done", durationMs: Date.now() - tHtml };
+    } catch (e) {
+      stages.htmlData = { state: "failed", error: String(e) };
+      // Continue — analysis stages can still run with empty hints/css.
+      html = { hints: { declaredFonts: [] }, cssTokens: emptyCssTokens() };
+    }
+  }
+
+  // ─── Stage 2-5: vision fragments ──
+  const stageDefs = [
+    { key: "identity" as const, run: runIdentityStage },
+    { key: "visuals" as const, run: runVisualsStage },
+    { key: "technical" as const, run: runTechnicalStage },
+    { key: "principles" as const, run: runPrinciplesStage },
+  ];
+
+  const fragments: {
+    identity?: IdentityFragment;
+    visuals?: VisualsFragment;
+    technical?: TechnicalFragment;
+    principles?: PrinciplesFragment;
+  } = {};
+
+  for (const def of stageDefs) {
+    type Frag = IdentityFragment | VisualsFragment | TechnicalFragment | PrinciplesFragment;
+    const cached = await persistGet<{ data: Frag; durationMs: number }>(
+      `brand-stage-${def.key}`,
+      url
+    );
+    if (cached) {
+      stages[def.key] = { state: "done", durationMs: cached.durationMs };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (fragments as any)[def.key] = cached.data;
+      continue;
+    }
+
+    if (Date.now() - t0 > POLL_BUDGET_MS) {
+      return runningResult(stages, t0, shot.runDurationMs);
+    }
+
+    const tStage = Date.now();
+    try {
+      const data = await def.run(
+        shot.screenshotBase64,
+        shot.contentType,
+        url,
+        html.hints,
+        html.cssTokens
+      );
+      const durationMs = Date.now() - tStage;
+      await persistSet(`brand-stage-${def.key}`, url, { data, durationMs });
+      stages[def.key] = { state: "done", durationMs };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (fragments as any)[def.key] = data;
+    } catch (e) {
+      stages[def.key] = { state: "failed", error: String(e) };
+      // Continue to next stage rather than aborting the whole pipeline.
+    }
+  }
+
+  // ─── Assembly ──
+  if (
+    fragments.identity &&
+    fragments.visuals &&
+    fragments.technical &&
+    fragments.principles
+  ) {
+    const guidelines: ExtractedBrandGuidelines = {
+      brand: fragments.identity.brand,
+      summary: fragments.identity.summary,
+      logo: fragments.visuals.logo,
+      colorSystem: fragments.visuals.colorSystem,
+      typography: fragments.technical.typography,
+      layout: fragments.technical.layout,
+      components: fragments.technical.components,
+      spacing: { scale: [], ruleOfThumb: undefined },
+      motion: fragments.principles.motion,
+      designPrinciples: fragments.principles.designPrinciples,
+      sectionArchetypes: fragments.principles.sectionArchetypes,
+      webPrinciples: fragments.principles.webPrinciples,
+    };
+    const capturedAt = new Date().toISOString();
+    await persistSet<CachedBrand>("brand", url, {
+      guidelines,
+      cssTokens: html.cssTokens,
+      hints: html.hints,
+      capturedAt,
+    });
+    return {
+      status: "done",
+      guidelines,
+      cssTokens: html.cssTokens,
+      hints: html.hints,
+      capturedAt,
+      stages,
+    };
+  }
+
+  // Some stages still pending — return progress, client polls again.
+  return runningResult(stages, t0, shot.runDurationMs);
 }
 
-// ─── Analysis phase (split out so each poll has a clean budget) ──────
+// ─── Helpers ─────────────────────────────────────────────────────────
 
-async function runAnalysisPhase(
-  url: string,
-  tmp: TmpScreenshot,
-  t0: number
-): Promise<BrandPollResult> {
-  const tHtml = Date.now();
-  const [html, hints] = await Promise.all([
-    fetch(url, { redirect: "follow" })
-      .then((r) => r.text())
-      .catch(() => ""),
-    enrichFromHtml(url),
-  ]);
-  const htmlMs = Date.now() - tHtml;
+function runningResult(
+  stages: StageMap,
+  t0: number,
+  runDurationMs?: number
+): BrandPollResult {
+  const elapsedMs = runDurationMs ?? Date.now() - t0;
+  return { status: "running", elapsedMs, stages };
+}
 
-  const tCss = Date.now();
-  const cssTokens = await extractCssTokens(url, html);
-  const cssMs = Date.now() - tCss;
-
-  const tAnalyze = Date.now();
-  const { guidelines } = await analyzeForBrandGuidelines(
-    tmp.screenshotBase64,
-    url,
-    hints,
-    cssTokens,
-    tmp.contentType
-  );
-  const analyzeMs = Date.now() - tAnalyze;
-
-  const capturedAt = new Date().toISOString();
-  await persistSet<CachedBrand>("brand", url, {
-    guidelines,
-    cssTokens,
-    hints,
-    capturedAt,
-  });
-
+function allDoneStages(): StageMap {
+  const s: StageStatus = { state: "done", durationMs: 0 };
   return {
-    status: "done",
-    guidelines,
-    cssTokens,
-    hints,
-    capturedAt,
-    timings: {
-      totalMs: Date.now() - t0,
-      htmlMs,
-      cssMs,
-      analyzeMs,
-      runDurationMs: tmp.runDurationMs,
-    },
+    screenshot: s,
+    htmlData: s,
+    identity: s,
+    visuals: s,
+    technical: s,
+    principles: s,
+  };
+}
+
+function emptyCssTokens(): CssTokens {
+  return {
+    colorFrequencies: {},
+    fontFamilies: [],
+    cssVariables: {},
+    mediaBreakpoints: [],
+    fontSizeValues: [],
+    radiusValues: [],
+    spacingValues: [],
+    easingValues: [],
+    stylesheetsRead: 0,
+    stylesheetsFailed: [],
   };
 }
