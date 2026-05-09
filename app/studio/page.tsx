@@ -46,14 +46,25 @@ export default function StudioPage() {
             <span className="font-bold tracking-tight text-base">Flowwwzy<span className="text-[#FAEBE3]">.</span></span>
             <span className="text-[10px] uppercase tracking-[0.16em] text-[#666]">Studio · Audit UI</span>
           </div>
-          <a
-            href="/library"
-            target="_blank"
-            rel="noopener"
-            className="text-xs text-[#888] hover:text-[#EDEDED] transition-colors"
-          >
-            View library →
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href="/library"
+              target="_blank"
+              rel="noopener"
+              className="text-xs text-[#888] hover:text-[#EDEDED] transition-colors"
+            >
+              View library →
+            </a>
+            <button
+              onClick={async () => {
+                await fetch("/api/studio/logout", { method: "POST" });
+                window.location.href = "/studio/login";
+              }}
+              className="text-xs text-[#666] hover:text-[#EDEDED] transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 
