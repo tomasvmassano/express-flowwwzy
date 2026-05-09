@@ -3,8 +3,12 @@
 import { Section, Container, Eyebrow } from "../_lib/Container";
 
 export type BenefitItem = {
-  /** Inline icon name. Must be one of the IDs in IconSet below. */
-  icon?: BenefitIconName;
+  /**
+   * Inline icon name. Validated at render — invalid values render no icon.
+   * Type is `string` (not the literal union) so AI-generated content compiles
+   * without per-call casts; runtime validation enforces the canonical set.
+   */
+  icon?: string;
   title: string;
   body: string;
 };
@@ -47,7 +51,7 @@ export default function BenefitsGridIcons(props: BenefitsGridIconsSlots) {
               key={b.title + i}
               className="card-row bg-lib-surface border border-lib-border rounded-[var(--lib-radius-card)] p-7 md:p-9 flex gap-5 md:gap-7"
             >
-              {b.icon && (
+              {isBenefitIconName(b.icon) && (
                 <span className="flex-shrink-0 w-12 h-12 rounded-card border border-lib-border flex items-center justify-center text-lib-accent">
                   <BenefitIcon name={b.icon} />
                 </span>
@@ -72,6 +76,12 @@ export default function BenefitsGridIcons(props: BenefitsGridIconsSlots) {
 // ─── Icon set ─────────────────────────────────────────────────────────
 
 export type BenefitIconName = "clock" | "tag" | "spark" | "shield" | "zap" | "check";
+
+const BENEFIT_ICON_NAMES: readonly BenefitIconName[] = ["clock", "tag", "spark", "shield", "zap", "check"];
+
+function isBenefitIconName(v: string | undefined): v is BenefitIconName {
+  return !!v && (BENEFIT_ICON_NAMES as readonly string[]).includes(v);
+}
 
 function BenefitIcon({ name }: { name: BenefitIconName }) {
   const stroke = "currentColor";

@@ -13,12 +13,16 @@ export type LogosPressStripSlots = {
   eyebrow?: string;
   headline?: string;
   logos: LogoEntry[];
-  /** "grid" = static grid; "marquee" = horizontal infinite scroll */
-  variant?: "grid" | "marquee";
+  /**
+   * "grid" (default) = static grid; "marquee" = horizontal infinite scroll.
+   * Widened to `string`; runtime normalises anything outside the set back to "grid".
+   */
+  variant?: string;
 };
 
 export default function LogosPressStrip(props: LogosPressStripSlots) {
-  const { eyebrow, headline, logos, variant = "grid" } = props;
+  const { eyebrow, headline, logos, variant: rawVariant } = props;
+  const variant = rawVariant === "marquee" ? "marquee" : "grid";
 
   return (
     <section

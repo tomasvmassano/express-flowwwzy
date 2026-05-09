@@ -10,8 +10,12 @@ export type CtaBannerClosingSlots = {
   primaryCtaHref?: string;
   secondaryCtaLabel?: string;
   secondaryCtaHref?: string;
-  /** When true, renders the banner as a centered "island" with the surface color */
-  variant?: "centered" | "island";
+  /**
+   * "centered" (default) renders flat; "island" wraps in a surface card.
+   * Widened to `string` so AI-generated content compiles; runtime
+   * normalises anything outside the canonical set back to "centered".
+   */
+  variant?: string;
 };
 
 export default function CtaBannerClosing(props: CtaBannerClosingSlots) {
@@ -23,8 +27,9 @@ export default function CtaBannerClosing(props: CtaBannerClosingSlots) {
     primaryCtaHref = "#",
     secondaryCtaLabel,
     secondaryCtaHref = "#",
-    variant = "centered",
+    variant: rawVariant,
   } = props;
+  const variant = rawVariant === "island" ? "island" : "centered";
 
   if (variant === "island") {
     return (
