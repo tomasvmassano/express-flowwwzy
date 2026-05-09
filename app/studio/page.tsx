@@ -42,9 +42,17 @@ export default function StudioPage() {
       {/* Top bar */}
       <header className="border-b border-[#1F1F1F] sticky top-0 bg-black/95 backdrop-blur-sm z-30">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-baseline gap-3">
-            <span className="font-bold tracking-tight text-base">Flowwwzy<span className="text-[#FAEBE3]">.</span></span>
-            <span className="text-[10px] uppercase tracking-[0.16em] text-[#666]">Studio · Audit UI</span>
+          <div className="flex items-center gap-5">
+            <a href="/studio/projects" className="flex items-baseline gap-2 hover:opacity-80">
+              <span className="font-bold tracking-tight text-base">Flowwwzy<span className="text-[#FAEBE3]">.</span></span>
+              <span className="text-[10px] uppercase tracking-[0.16em] text-[#666]">Studio</span>
+            </a>
+            <nav className="flex items-center gap-3 text-xs">
+              <a href="/studio/projects" className="text-[#888] hover:text-[#EDEDED] transition-colors">
+                Projects
+              </a>
+              <span className="text-[#EDEDED] font-medium">Sandbox</span>
+            </nav>
           </div>
           <div className="flex items-center gap-3">
             <a
